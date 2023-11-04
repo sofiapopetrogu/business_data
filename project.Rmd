@@ -1,0 +1,106 @@
+---
+title: "Business project: energy price forecasting"
+author: "Esteban Ortega Dominguez..."
+font: 12pt
+output:
+  #html_document:
+  #  toc: true
+    #number_sections: true
+  pdf_document:
+    toc: true
+#editor_options:
+#  markdown: 
+#    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Introduction
+
+# 2. Dataset
+
+## 2.1 Loading data
+
+```{r libraries,  echo=TRUE, eval=TRUE, message=FALSE, include=FALSE}
+library(tidyverse)
+library(knitr)
+library(ggplot2)
+library(dplyr)
+# to read the excel files
+library(readxl)
+```
+
+
+```{r}
+# Specify the path to your Excel file
+excel_file_path <- "data/generation_monthly.xlsx"
+
+column_names <- c("year", "month", "state", "type_of_producer", "energy_source", "generation_mwh")
+
+generation_data <- data.frame()
+
+# Get the list of sheet names in the Excel file
+sheet_names <- excel_sheets(excel_file_path)
+
+# Loop through each sheet
+for (sheet_name in sheet_names) {
+  # Read data from the current sheet, starting from the third row
+  data <- read_excel(excel_file_path, sheet = sheet_name, skip = 1)
+  colnames(data) <- column_names
+
+  # Combine the data into the 'generation_data' dataframe
+  generation_data <- bind_rows(generation_data, data)}
+
+head(generation_data)
+
+
+#Convert chars to factors
+convert_chars_to_factors <- function(df) {
+  for (col in names(df)) {
+    if (is.character(df[[col]])) {
+      df[[col]] <- factor(df[[col]])
+    }
+  }
+  return(df)
+}
+
+generation_data <- convert_chars_to_factors(generation_data)
+generation_data$month <- factor(generation_data$month)
+generation_data$year <- factor(generation_data$year)
+
+# Create date column
+generation_data$date <- as.Date(paste(generation_data$year, generation_data$month, "01", sep = "-"))
+#generation_data$date <- factor(generation_data$date)
+```
+
+
+```{r}
+summary(generation_data)
+```
+
+```{r}
+str(generation_data)
+```
+
+
+```{r}
+ggplot(data = generation_data, mapping = aes(x = date, y = generation_mwh))+
+  geom_point()
+```
+
+```{r}
+plot_data <- generation_data %>%
+  group_by(date, energy_source) %>%
+  summarise(gen_by_energy = sum(generation_mwh))
+```
+
+```{r}
+plot_data
+```
+```{r}
+ggplot(data = plot_data, aes(x = date, y = gen_by_energy, color= energy_source)) +
+  geom_point()
+```
+
