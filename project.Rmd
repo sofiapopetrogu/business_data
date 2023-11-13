@@ -30,6 +30,7 @@ library(ggplot2)
 library(dplyr)
 # to read the excel files
 library(readxl)
+library(readr)
 ```
 
 
@@ -82,11 +83,19 @@ summary(generation_data)
 
 ```{r}
 str(generation_data)
+df <- generation_data %>% filter(state == "DC")
+
+summary(df)
+
+write_csv(df, 'df.csv')
+write_csv(generation_data,'data.csv')
 ```
 
 
 ```{r}
-ggplot(data = generation_data, mapping = aes(x = date, y = generation_mwh))+
+
+
+ggplot(data = df, mapping = aes(x = date, y = generation_mwh))+
   geom_point()
 ```
 

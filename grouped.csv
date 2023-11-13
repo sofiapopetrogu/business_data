@@ -1,0 +1,265 @@
+date;state;energy_source;generation_mwh;type_of_producer_Combined Heat and Power, Commercial Power;type_of_producer_Combined Heat and Power, Electric Power;type_of_producer_Electric Generators, Electric Utilities;type_of_producer_Electric Generators, Independent Power Producers;type_of_producer_Total Electric Power Industry;energy_source_Natural Gas;energy_source_Other Biomass;energy_source_Petroleum;energy_source_Solar Thermal and Photovoltaic;energy_source_Total
+2001-01-01;DC;PetroleumTotalPetroleumTotal;37004.0;0;0;0;2;2;0;0;2;0;2
+2001-01-02;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2001-01-03;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2001-01-04;DC;PetroleumTotalPetroleumTotal;3064.0;0;0;0;2;2;0;0;2;0;2
+2001-01-05;DC;PetroleumTotalPetroleumTotal;23684.0;0;0;0;2;2;0;0;2;0;2
+2001-01-06;DC;PetroleumTotalPetroleumTotal;1952.0;0;0;0;2;2;0;0;2;0;2
+2001-01-07;DC;PetroleumTotalPetroleumTotal;96428.0;0;0;0;2;2;0;0;2;0;2
+2001-01-08;DC;PetroleumTotalPetroleumTotal;190348.0;0;0;0;2;2;0;0;2;0;2
+2001-01-09;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2001-01-10;DC;PetroleumTotalPetroleumTotal;13988.0;0;0;0;2;2;0;0;2;0;2
+2001-01-11;DC;PetroleumTotalPetroleumTotal;126488.0;0;0;0;2;2;0;0;2;0;2
+2001-01-12;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2002-01-01;DC;PetroleumTotalPetroleumTotal;-4132.0;0;0;0;2;2;0;0;2;0;2
+2002-01-02;DC;PetroleumTotalPetroleumTotal;18916.0;0;0;0;2;2;0;0;2;0;2
+2002-01-03;DC;PetroleumTotalPetroleumTotal;45596.0;0;0;0;2;2;0;0;2;0;2
+2002-01-04;DC;PetroleumTotalPetroleumTotal;91992.0;0;0;0;2;2;0;0;2;0;2
+2002-01-05;DC;PetroleumTotalPetroleumTotal;-2464.0;0;0;0;2;2;0;0;2;0;2
+2002-01-06;DC;PetroleumTotalPetroleumTotal;123312.0;0;0;0;2;2;0;0;2;0;2
+2002-01-07;DC;PetroleumTotalPetroleumTotal;405336.0;0;0;0;2;2;0;0;2;0;2
+2002-01-08;DC;PetroleumTotalPetroleumTotal;342904.0;0;0;0;2;2;0;0;2;0;2
+2002-01-09;DC;PetroleumTotalPetroleumTotal;12680.0;0;0;0;2;2;0;0;2;0;2
+2002-01-10;DC;PetroleumTotalPetroleumTotal;-2260.0;0;0;0;2;2;0;0;2;0;2
+2002-01-11;DC;PetroleumTotalPetroleumTotal;1684.0;0;0;0;2;2;0;0;2;0;2
+2002-01-12;DC;PetroleumTotalPetroleumTotal;14356.0;0;0;0;2;2;0;0;2;0;2
+2003-01-01;DC;PetroleumTotalPetroleumTotal;39732.0;0;0;0;2;2;0;0;2;0;2
+2003-01-02;DC;PetroleumTotalPetroleumTotal;50196.0;0;0;0;2;2;0;0;2;0;2
+2003-01-03;DC;PetroleumTotalPetroleumTotal;52344.0;0;0;0;2;2;0;0;2;0;2
+2003-01-04;DC;PetroleumTotalPetroleumTotal;3056.0;0;0;0;2;2;0;0;2;0;2
+2003-01-05;DC;PetroleumTotalPetroleumTotal;6456.0;0;0;0;2;2;0;0;2;0;2
+2003-01-06;DC;PetroleumTotalPetroleumTotal;14208.0;0;0;0;2;2;0;0;2;0;2
+2003-01-07;DC;PetroleumTotalPetroleumTotal;42964.0;0;0;0;2;2;0;0;2;0;2
+2003-01-08;DC;PetroleumTotalPetroleumTotal;98268.0;0;0;0;2;2;0;0;2;0;2
+2003-01-09;DC;PetroleumTotalPetroleumTotal;-2396.0;0;0;0;2;2;0;0;2;0;2
+2003-01-10;DC;PetroleumTotalPetroleumTotal;-2500.0;0;0;0;2;2;0;0;2;0;2
+2003-01-11;DC;PetroleumTotalPetroleumTotal;-2580.0;0;0;0;2;2;0;0;2;0;2
+2003-01-12;DC;PetroleumTotalPetroleumTotal;-3172.0;0;0;0;2;2;0;0;2;0;2
+2004-01-01;DC;PetroleumTotalPetroleumTotal;63280.0;0;0;0;2;2;0;0;2;0;2
+2004-01-02;DC;PetroleumTotalPetroleumTotal;7316.0;0;0;0;2;2;0;0;2;0;2
+2004-01-03;DC;PetroleumTotalPetroleumTotal;2196.0;0;0;0;2;2;0;0;2;0;2
+2004-01-04;DC;PetroleumTotalPetroleumTotal;-2252.0;0;0;0;2;2;0;0;2;0;2
+2004-01-05;DC;PetroleumTotalPetroleumTotal;10696.0;0;0;0;2;2;0;0;2;0;2
+2004-01-06;DC;PetroleumTotalPetroleumTotal;24616.0;0;0;0;2;2;0;0;2;0;2
+2004-01-07;DC;PetroleumTotalPetroleumTotal;6720.0;0;0;0;2;2;0;0;2;0;2
+2004-01-08;DC;PetroleumTotalPetroleumTotal;18420.0;0;0;0;2;2;0;0;2;0;2
+2004-01-09;DC;PetroleumTotalPetroleumTotal;4004.0;0;0;0;2;2;0;0;2;0;2
+2004-01-10;DC;PetroleumTotalPetroleumTotal;-2536.0;0;0;0;2;2;0;0;2;0;2
+2004-01-11;DC;PetroleumTotalPetroleumTotal;-2792.0;0;0;0;2;2;0;0;2;0;2
+2004-01-12;DC;PetroleumTotalPetroleumTotal;16280.0;0;0;0;2;2;0;0;2;0;2
+2005-01-01;DC;PetroleumTotalPetroleumTotal;8372.0;0;0;0;2;2;0;0;2;0;2
+2005-01-02;DC;PetroleumTotalPetroleumTotal;860.0;0;0;0;2;2;0;0;2;0;2
+2005-01-03;DC;PetroleumTotalPetroleumTotal;-4376.0;0;0;0;2;2;0;0;2;0;2
+2005-01-04;DC;PetroleumTotalPetroleumTotal;-2396.0;0;0;0;2;2;0;0;2;0;2
+2005-01-05;DC;PetroleumTotalPetroleumTotal;-2440.0;0;0;0;2;2;0;0;2;0;2
+2005-01-06;DC;PetroleumTotalPetroleumTotal;169344.0;0;0;0;2;2;0;0;2;0;2
+2005-01-07;DC;PetroleumTotalPetroleumTotal;361964.0;0;0;0;2;2;0;0;2;0;2
+2005-01-08;DC;PetroleumTotalPetroleumTotal;301108.0;0;0;0;2;2;0;0;2;0;2
+2005-01-09;DC;PetroleumTotalPetroleumTotal;15892.0;0;0;0;2;2;0;0;2;0;2
+2005-01-10;DC;PetroleumTotalPetroleumTotal;36672.0;0;0;0;2;2;0;0;2;0;2
+2005-01-11;DC;PetroleumTotalPetroleumTotal;12.0;0;0;0;2;2;0;0;2;0;2
+2005-01-12;DC;PetroleumTotalPetroleumTotal;19156.0;0;0;0;2;2;0;0;2;0;2
+2006-01-01;DC;PetroleumTotalPetroleumTotal;9408.0;0;0;0;2;2;0;0;2;0;2
+2006-01-02;DC;PetroleumTotalPetroleumTotal;5896.0;0;0;0;2;2;0;0;2;0;2
+2006-01-03;DC;PetroleumTotalPetroleumTotal;-1316.0;0;0;0;2;2;0;0;2;0;2
+2006-01-04;DC;PetroleumTotalPetroleumTotal;600.0;0;0;0;2;2;0;0;2;0;2
+2006-01-05;DC;PetroleumTotalPetroleumTotal;6824.0;0;0;0;2;2;0;0;2;0;2
+2006-01-06;DC;PetroleumTotalPetroleumTotal;14972.0;0;0;0;2;2;0;0;2;0;2
+2006-01-07;DC;PetroleumTotalPetroleumTotal;90196.0;0;0;0;2;2;0;0;2;0;2
+2006-01-08;DC;PetroleumTotalPetroleumTotal;191016.0;0;0;0;2;2;0;0;2;0;2
+2006-01-09;DC;PetroleumTotalPetroleumTotal;-2064.0;0;0;0;2;2;0;0;2;0;2
+2006-01-10;DC;PetroleumTotalPetroleumTotal;2212.0;0;0;0;2;2;0;0;2;0;2
+2006-01-11;DC;PetroleumTotalPetroleumTotal;-2636.0;0;0;0;2;2;0;0;2;0;2
+2006-01-12;DC;PetroleumTotalPetroleumTotal;10760.0;0;0;0;2;2;0;0;2;0;2
+2007-01-01;DC;PetroleumTotalPetroleumTotal;-2072.0;0;0;0;2;2;0;0;2;0;2
+2007-01-02;DC;PetroleumTotalPetroleumTotal;10728.0;0;0;0;2;2;0;0;2;0;2
+2007-01-03;DC;PetroleumTotalPetroleumTotal;-956.0;0;0;0;2;2;0;0;2;0;2
+2007-01-04;DC;PetroleumTotalPetroleumTotal;-1264.0;0;0;0;2;2;0;0;2;0;2
+2007-01-05;DC;PetroleumTotalPetroleumTotal;-1272.0;0;0;0;2;2;0;0;2;0;2
+2007-01-06;DC;PetroleumTotalPetroleumTotal;56572.0;0;0;0;2;2;0;0;2;0;2
+2007-01-07;DC;PetroleumTotalPetroleumTotal;45248.0;0;0;0;2;2;0;0;2;0;2
+2007-01-08;DC;PetroleumTotalPetroleumTotal;162324.0;0;0;0;2;2;0;0;2;0;2
+2007-01-09;DC;PetroleumTotalPetroleumTotal;22064.0;0;0;0;2;2;0;0;2;0;2
+2007-01-10;DC;PetroleumTotalPetroleumTotal;14544.0;0;0;0;2;2;0;0;2;0;2
+2007-01-11;DC;PetroleumTotalPetroleumTotal;-2828.0;0;0;0;2;2;0;0;2;0;2
+2007-01-12;DC;PetroleumTotalPetroleumTotal;-2084.0;0;0;0;2;2;0;0;2;0;2
+2008-01-01;DC;PetroleumTotalPetroleumTotal;11988.0;0;0;0;2;2;0;0;2;0;2
+2008-01-02;DC;PetroleumTotalPetroleumTotal;5032.0;0;0;0;2;2;0;0;2;0;2
+2008-01-03;DC;PetroleumTotalPetroleumTotal;1604.0;0;0;0;2;2;0;0;2;0;2
+2008-01-04;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2008-01-05;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2008-01-06;DC;PetroleumTotalPetroleumTotal;200476.0;0;0;0;2;2;0;0;2;0;2
+2008-01-07;DC;PetroleumTotalPetroleumTotal;34968.0;0;0;0;2;2;0;0;2;0;2
+2008-01-08;DC;PetroleumTotalPetroleumTotal;21916.0;0;0;0;2;2;0;0;2;0;2
+2008-01-09;DC;PetroleumTotalPetroleumTotal;2316.0;0;0;0;2;2;0;0;2;0;2
+2008-01-10;DC;PetroleumTotalPetroleumTotal;10964.0;0;0;0;2;2;0;0;2;0;2
+2008-01-11;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2008-01-12;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2009-01-01;DC;PetroleumTotalPetroleumTotal;23212.0;0;0;0;2;2;0;0;2;0;2
+2009-01-02;DC;PetroleumTotalPetroleumTotal;11500.0;0;0;0;2;2;0;0;2;0;2
+2009-01-03;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2009-01-04;DC;PetroleumTotalPetroleumTotal;2324.0;0;0;0;2;2;0;0;2;0;2
+2009-01-05;DC;PetroleumTotalPetroleumTotal;732.0;0;0;0;2;2;0;0;2;0;2
+2009-01-06;DC;PetroleumTotalPetroleumTotal;31668.0;0;0;0;2;2;0;0;2;0;2
+2009-01-07;DC;PetroleumTotalPetroleumTotal;24228.0;0;0;0;2;2;0;0;2;0;2
+2009-01-08;DC;PetroleumTotalPetroleumTotal;46708.0;0;0;0;2;2;0;0;2;0;2
+2009-01-09;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2009-01-10;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2009-01-11;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2009-01-12;DC;PetroleumTotalPetroleumTotal;1624.0;0;0;0;2;2;0;0;2;0;2
+2010-01-01;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2010-01-02;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2010-01-03;DC;PetroleumTotalPetroleumTotal;9304.0;0;0;0;2;2;0;0;2;0;2
+2010-01-04;DC;PetroleumTotalPetroleumTotal;3220.0;0;0;0;2;2;0;0;2;0;2
+2010-01-05;DC;PetroleumTotalPetroleumTotal;95700.0;0;0;0;2;2;0;0;2;0;2
+2010-01-06;DC;PetroleumTotalPetroleumTotal;297684.0;0;0;0;2;2;0;0;2;0;2
+2010-01-07;DC;PetroleumTotalPetroleumTotal;203752.0;0;0;0;2;2;0;0;2;0;2
+2010-01-08;DC;PetroleumTotalPetroleumTotal;95976.0;0;0;0;2;2;0;0;2;0;2
+2010-01-09;DC;PetroleumTotalPetroleumTotal;58812.0;0;0;0;2;2;0;0;2;0;2
+2010-01-10;DC;PetroleumTotalPetroleumTotal;13504.0;0;0;0;2;2;0;0;2;0;2
+2010-01-11;DC;PetroleumTotalPetroleumTotal;0.0;0;0;0;2;2;0;0;2;0;2
+2010-01-12;DC;PetroleumTotalPetroleumTotal;21480.0;0;0;0;2;2;0;0;2;0;2
+2011-01-01;DC;Natural GasTotalPetroleumTotalNatural GasPetroleumTotal;27040.88;0;0;2;2;3;2;0;2;0;3
+2011-01-02;DC;Natural GasTotalNatural GasTotal;17001.64;0;0;2;0;2;2;0;0;0;2
+2011-01-03;DC;Natural GasTotalNatural GasTotal;19701.48;0;0;2;0;2;2;0;0;0;2
+2011-01-04;DC;Natural GasTotalNatural GasTotal;21955.72;0;0;2;0;2;2;0;0;0;2
+2011-01-05;DC;Natural GasTotalPetroleumTotalNatural GasPetroleumTotal;36624.4;0;0;2;2;3;2;0;2;0;3
+2011-01-06;DC;Natural GasTotalPetroleumTotalNatural GasPetroleumTotal;125112.28;0;0;2;2;3;2;0;2;0;3
+2011-01-07;DC;Natural GasTotalPetroleumTotalNatural GasPetroleumTotal;322483.96;0;0;2;2;3;2;0;2;0;3
+2011-01-08;DC;Natural GasTotalPetroleumTotalNatural GasPetroleumTotal;131478.04;0;0;2;2;3;2;0;2;0;3
+2011-01-09;DC;Natural GasTotalPetroleumTotalNatural GasPetroleumTotal;35280.479999999996;0;0;2;2;3;2;0;2;0;3
+2011-01-10;DC;Natural GasTotalNatural GasTotal;23693.36;0;0;2;0;2;2;0;0;0;2
+2011-01-11;DC;Natural GasTotalNatural GasTotal;20574.56;0;0;2;0;2;2;0;0;0;2
+2011-01-12;DC;Natural GasTotalNatural GasTotal;22549.04;0;0;2;0;2;2;0;0;0;2
+2012-01-01;DC;TotalNatural GasPetroleumTotalPetroleumTotalNatural GasPetroleum;21537.0;3;0;0;2;3;2;0;3;0;3
+2012-01-02;DC;TotalNatural GasPetroleumTotalPetroleumTotalNatural GasPetroleum;17534.8;3;0;0;2;3;2;0;3;0;3
+2012-01-03;DC;TotalNatural GasPetroleumTotalPetroleumTotalNatural GasPetroleum;19239.24;3;0;0;2;3;2;0;3;0;3
+2012-01-04;DC;TotalNatural GasPetroleumTotalPetroleumTotalNatural GasPetroleum;28637.24;3;0;0;2;3;2;0;3;0;3
+2012-01-05;DC;TotalNatural GasPetroleumTotalPetroleumTotalNatural GasPetroleum;47408.08;3;0;0;2;3;2;0;3;0;3
+2012-01-06;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;22892.16;3;0;0;0;3;2;0;2;0;2
+2012-01-07;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;26979.88;3;0;0;0;3;2;0;2;0;2
+2012-01-08;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;24954.8;3;0;0;0;3;2;0;2;0;2
+2012-01-09;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;22722.88;3;0;0;0;3;2;0;2;0;2
+2012-01-10;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;19683.48;3;0;0;0;3;2;0;2;0;2
+2012-01-11;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;16566.96;3;0;0;0;3;2;0;2;0;2
+2012-01-12;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;18990.6;3;0;0;0;3;2;0;2;0;2
+2013-01-01;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;20191.12;3;0;0;0;3;2;0;2;0;2
+2013-01-02;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;20188.08;3;0;0;0;3;2;0;2;0;2
+2013-01-03;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;20429.2;3;0;0;0;3;2;0;2;0;2
+2013-01-04;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;19962.4;3;0;0;0;3;2;0;2;0;2
+2013-01-05;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;21344.2;3;0;0;0;3;2;0;2;0;2
+2013-01-06;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;23870.36;3;0;0;0;3;2;0;2;0;2
+2013-01-07;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;25683.12;3;0;0;0;3;2;0;2;0;2
+2013-01-08;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;26760.12;3;0;0;0;3;2;0;2;0;2
+2013-01-09;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;24186.0;3;0;0;0;3;2;0;2;0;2
+2013-01-10;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;22360.16;3;0;0;0;3;2;0;2;0;2
+2013-01-11;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;19256.48;3;0;0;0;3;2;0;2;0;2
+2013-01-12;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;19177.12;3;0;0;0;3;2;0;2;0;2
+2014-01-01;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;20036.48;3;0;0;0;3;2;0;2;0;2
+2014-01-02;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;20348.32;3;0;0;0;3;2;0;2;0;2
+2014-01-03;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;22227.28;3;0;0;0;3;2;0;2;0;2
+2014-01-04;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;20500.36;3;0;0;0;3;2;0;2;0;2
+2014-01-05;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;21386.4;3;0;0;0;3;2;0;2;0;2
+2014-01-06;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;22442.68;3;0;0;0;3;2;0;2;0;2
+2014-01-07;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;24189.0;3;0;0;0;3;2;0;2;0;2
+2014-01-08;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;23935.28;3;0;0;0;3;2;0;2;0;2
+2014-01-09;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;23156.56;3;0;0;0;3;2;0;2;0;2
+2014-01-10;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;18819.24;3;0;0;0;3;2;0;2;0;2
+2014-01-11;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;20418.56;3;0;0;0;3;2;0;2;0;2
+2014-01-12;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;22429.68;3;0;0;0;3;2;0;2;0;2
+2015-01-01;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;6852.0;3;0;0;0;3;2;0;2;0;2
+2015-01-02;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;6300.0;3;0;0;0;3;2;0;2;0;2
+2015-01-03;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;6700.0;3;0;0;0;3;2;0;2;0;2
+2015-01-04;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;6872.0;3;0;0;0;3;2;0;2;0;2
+2015-01-05;DC;TotalNatural GasPetroleumTotalNatural GasPetroleum;7804.0;3;0;0;0;3;2;0;2;0;2
+2015-01-06;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;23909.0;3;3;0;0;4;3;2;2;0;3
+2015-01-07;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;27614.0;3;3;0;0;4;3;2;2;0;3
+2015-01-08;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;26593.0;3;3;0;0;4;3;2;2;0;3
+2015-01-09;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;24275.0;3;3;0;0;4;3;2;2;0;3
+2015-01-10;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;25704.0;3;3;0;0;4;3;2;2;0;3
+2015-01-11;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;25634.0;3;3;0;0;4;3;2;2;0;3
+2015-01-12;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;26740.0;3;3;0;0;4;3;2;2;0;3
+2016-01-01;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;25674.0;3;3;0;0;4;3;2;2;0;3
+2016-01-02;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;23740.0;3;3;0;0;4;3;2;2;0;3
+2016-01-03;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;24748.0;3;3;0;0;4;3;2;2;0;3
+2016-01-04;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;25662.0;3;3;0;0;4;3;2;2;0;3
+2016-01-05;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;26435.0;3;3;0;0;4;3;2;2;0;3
+2016-01-06;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;26465.0;3;3;0;0;4;3;2;2;0;3
+2016-01-07;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;28135.0;3;3;0;0;4;3;2;2;0;3
+2016-01-08;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;27902.0;3;3;0;0;4;3;2;2;0;3
+2016-01-09;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;24402.0;3;3;0;0;4;3;2;2;0;3
+2016-01-10;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;22662.0;3;3;0;0;4;3;2;2;0;3
+2016-01-11;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;24000.0;3;3;0;0;4;3;2;2;0;3
+2016-01-12;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumTotalNatural GasOther Biomass;26065.0;3;3;0;0;4;3;2;2;0;3
+2017-01-01;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;38868.0;4;0;0;0;4;2;2;2;0;2
+2017-01-02;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;21988.0;4;0;0;0;4;2;2;2;0;2
+2017-01-03;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;35576.0;4;0;0;0;4;2;2;2;0;2
+2017-01-04;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;15460.0;4;0;0;0;4;2;2;2;0;2
+2017-01-05;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;18456.0;4;0;0;0;4;2;2;2;0;2
+2017-01-06;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;23708.0;4;0;0;0;4;2;2;2;0;2
+2017-01-07;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;22664.0;4;0;0;0;4;2;2;2;0;2
+2017-01-08;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;10460.0;4;0;0;0;4;2;2;2;0;2
+2017-01-09;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;20788.0;4;0;0;0;4;2;2;2;0;2
+2017-01-10;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;18768.0;4;0;0;0;4;2;2;2;0;2
+2017-01-11;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;17140.0;4;0;0;0;4;2;2;2;0;2
+2017-01-12;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;23608.0;4;0;0;0;4;2;2;2;0;2
+2018-01-01;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;27748.0;4;0;0;0;4;2;2;2;0;2
+2018-01-02;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;30372.0;4;0;0;0;4;2;2;2;0;2
+2018-01-03;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;35376.0;4;0;0;0;4;2;2;2;0;2
+2018-01-04;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;38196.0;4;0;0;0;4;2;2;2;0;2
+2018-01-05;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;15256.0;4;0;0;0;4;2;2;2;0;2
+2018-01-06;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;26208.0;4;0;0;0;4;2;2;2;0;2
+2018-01-07;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;36416.0;4;0;0;0;4;2;2;2;0;2
+2018-01-08;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;18792.0;4;0;0;0;4;2;2;2;0;2
+2018-01-09;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;24028.0;4;0;0;0;4;2;2;2;0;2
+2018-01-10;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;15184.0;4;0;0;0;4;2;2;2;0;2
+2018-01-11;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;16820.0;4;0;0;0;4;2;2;2;0;2
+2018-01-12;DC;TotalNatural GasPetroleumOther BiomassTotalNatural GasPetroleumOther Biomass;32928.0;4;0;0;0;4;2;2;2;0;2
+2019-01-01;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;60535.0;4;0;0;2;5;2;2;2;2;3
+2019-01-02;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;50232.0;4;0;0;2;5;2;2;2;2;3
+2019-01-03;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;60080.0;4;0;0;2;5;2;2;2;2;3
+2019-01-04;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;55684.0;4;0;0;2;5;2;2;2;2;3
+2019-01-05;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;50688.0;4;0;0;2;5;2;2;2;2;3
+2019-01-06;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;62048.0;4;0;0;2;5;2;2;2;2;3
+2019-01-07;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;57236.0;4;0;0;2;5;2;2;2;2;3
+2019-01-08;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;59315.0;4;0;0;2;5;2;2;2;2;3
+2019-01-09;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;58432.0;4;0;0;2;5;2;2;2;2;3
+2019-01-10;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;55100.0;4;0;0;2;5;2;2;2;2;3
+2019-01-11;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;55284.0;4;0;0;2;5;2;2;2;2;3
+2019-01-12;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;71684.0;4;0;0;2;5;2;2;2;2;3
+2020-01-01;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;71328.0;4;0;0;2;5;2;2;2;2;3
+2020-01-02;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;73176.0;4;0;0;2;5;2;2;2;2;3
+2020-01-03;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;61960.0;4;0;0;2;5;2;2;2;2;3
+2020-01-04;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;48120.0;4;0;0;2;5;2;2;2;2;3
+2020-01-05;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;50097.0;4;0;0;2;5;2;2;2;2;3
+2020-01-06;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;64648.0;4;0;0;2;5;2;2;2;2;3
+2020-01-07;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;75630.0;4;0;0;2;5;2;2;2;2;3
+2020-01-08;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;78856.0;4;0;0;2;5;2;2;2;2;3
+2020-01-09;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;73994.0;4;0;0;2;5;2;2;2;2;3
+2020-01-10;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;73872.0;4;0;0;2;5;2;2;2;2;3
+2020-01-11;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;60848.0;4;0;0;2;5;2;2;2;2;3
+2020-01-12;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;71892.0;4;0;0;2;5;2;2;2;2;3
+2021-01-01;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;70176.0;4;0;0;2;5;2;2;2;2;3
+2021-01-02;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;62685.0;4;0;0;2;5;2;2;2;2;3
+2021-01-03;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;70288.0;4;0;0;2;5;2;2;2;2;3
+2021-01-04;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;51944.0;4;0;0;2;5;2;2;2;2;3
+2021-01-05;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;72440.0;4;0;0;2;5;2;2;2;2;3
+2021-01-06;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;80120.0;4;0;0;2;5;2;2;2;2;3
+2021-01-07;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;84712.0;4;0;0;2;5;2;2;2;2;3
+2021-01-08;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;78376.0;4;0;0;2;5;2;2;2;2;3
+2021-01-09;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;76488.0;4;0;0;2;5;2;2;2;2;3
+2021-01-10;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;63456.0;4;0;0;2;5;2;2;2;2;3
+2021-01-11;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;68450.0;4;0;0;2;5;2;2;2;2;3
+2021-01-12;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and Photovoltaic;65128.0;4;0;0;2;5;2;2;2;2;3
+2022-01-01;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;47839.0;4;0;2;2;5;2;2;2;3;4
+2022-01-02;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;42347.0;4;0;2;2;5;2;2;2;3;4
+2022-01-03;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;64436.0;4;0;2;2;5;2;2;2;3;4
+2022-01-04;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;60711.0;4;0;2;2;5;2;2;2;3;4
+2022-01-05;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;68744.0;4;0;2;2;5;2;2;2;3;4
+2022-01-06;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;55592.0;4;0;2;2;5;2;2;2;3;4
+2022-01-07;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;56437.0;4;0;2;2;5;2;2;2;3;4
+2022-01-08;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;55404.0;4;0;2;2;5;2;2;2;3;4
+2022-01-09;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;50000.0;4;0;2;2;5;2;2;2;3;4
+2022-01-10;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;48633.0;4;0;2;2;5;2;2;2;3;4
+2022-01-11;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;45178.0;4;0;2;2;5;2;2;2;3;4
+2022-01-12;DC;TotalNatural GasPetroleumSolar Thermal and PhotovoltaicOther BiomassTotalNatural GasPetroleumOther BiomassTotalSolar Thermal and PhotovoltaicTotalSolar Thermal and Photovoltaic;45630.0;4;0;2;2;5;2;2;2;3;4
