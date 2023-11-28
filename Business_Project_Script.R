@@ -77,17 +77,8 @@ plot(data$DATE, data$Combined.Heat.and.Power..Electric.Power, type = "l", col= '
      main = "Time Series Combined Heat and Power. Commercial Power", ylim = c(0, 20000))
 legend('topright', legend = 'Generation of electric power', col = 'orange', lty=1)
 
-# plot electric generators from electric utilities
 
-plot(data$DATE, data$Electric.Generators..Electric.Utilities, type = "l", col= 'orange', pch=16 ,xlab = "Date", ylab = "Generation",
-     main = "Time Series Electric Generators | electric utilities", ylim = c(0, 10000))
-legend('topright', legend = 'Generation of electric power', col = 'orange', lty=1)
 
-# plot electric generators from indipendent producers
-
-plot(data$DATE, data$Electric.Generators..Independent.Power.Producers, type = "l", col= 'orange', pch=16 ,xlab = "Date", ylab = "Generation",
-     main = "Time Series Electric Generators | electric utilities", ylim = c(0, 100000))
-legend('topright', legend = 'Generation of electric power', col = 'orange', lty=1)
 
 ## Assess Autocorrelations 
 
