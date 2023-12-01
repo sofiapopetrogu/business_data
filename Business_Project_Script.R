@@ -24,8 +24,30 @@ summary(data)
 # Convert DATE to Date type
 data$DATE <- as.Date(data$DATE, format = "%d/%m/%Y")
 
+# Add total generation columns
+
+data$total_generation_producer <- rowSums(data[, 2:5])
+data$total_generation_source <- rowSums(data[, 6:9])
+
+head(data)
 
 #################### PLOTTING ###################
+# Remove missing or non-finite values
+valid_indices <- complete.cases(data$DATE)
+data <- data[valid_indices, ]
+
+summary(data)
+
+# Plot time series for total generation columns: source
+plot(data$DATE, data$total_generation_source, type = "l", col = "black", pch = 16, xlab = "Data", ylab = "Generation",
+     main = "Time Series of Total Energy Generation from Producers", ylim = c(0, 100000))
+
+# Since data has a wide range, apply logarithmic scale to total column
+data$ltotal_generation_source <- log(data$total_generation_source)
+
+#Plot data with log transformation
+plot(data$DATE, data$ltotal_generation_source, type = "l", col = "black", pch = 16, xlab = "Data", ylab = "Log Generation",
+     main = "Time Series of Log Total Energy Generation from Producers", ylim = c(0, 20))
 
 # Plot time series for Solar, thermal and photovoltaic
 plot(data$DATE, data$Solar.Thermal.and.Photovoltaic, type = "l", col= 'orange', pch=16 ,xlab = "Date", ylab = "Generation",
