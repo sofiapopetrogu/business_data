@@ -26,10 +26,19 @@ data$DATE <- as.Date(data$DATE, format = "%d/%m/%Y")
 
 # Add total generation columns
 
+
+# negative values in generation indicate independent power producer
+# example: solar power producers relying on sunlight might require independent power sources/producers
+# on non-sunny days
+
+data$Petroleum <- abs(data$Petroleum)
 data$total_generation_producer <- rowSums(data[, 2:5])
 data$total_generation_source <- rowSums(data[, 6:9])
 
 head(data)
+
+# Predicting on Petroleum no longer useful since conversion to renewable energy after 2010
+# Maybe could do some prediction on later generation after the switch happens
 
 #################### PLOTTING ###################
 # Remove missing or non-finite values
@@ -46,8 +55,52 @@ plot(data$DATE, data$total_generation_source, type = "l", col = "black", pch = 1
 data$ltotal_generation_source <- log(data$total_generation_source)
 
 #Plot data with log transformation
+# since log 0 is undefined, you have missing values
 plot(data$DATE, data$ltotal_generation_source, type = "l", col = "black", pch = 16, xlab = "Data", ylab = "Log Generation",
      main = "Time Series of Log Total Energy Generation from Producers", ylim = c(0, 20))
+
+# We can see switch from petroleum/non-renewable energy production 
+# to renewable sources starting in 2010
+
+library(lubridate)
+
+data$month <- month(data$DATE, label = TRUE)
+
+ggplot(data, aes(x = data$month, y = data$total_generation_source)) +
+  geom_line() +
+  labs(title = "Absolute Total Generation Source by Month",
+       x = "Month",
+       y = "Absolute Total Generation Source")
+
+# Average per month
+
+head(data)
+
+unique(data$month)
+head(data$DATE)
+
+summary(data$total_generation_source)
+hist(data$total_generation_source)
+
+avg_data <- data %>%
+  group_by(data$month) %>%
+  summarise(avg_abs_total_generation_source = mean(data$total_generation_source, na.rm = TRUE))
+
+print(avg_data)
+table(data$month)
+
+ggplot(data, aes(x = month, y = total_generation_source)) +
+  geom_point() +
+  labs(title = "Raw Absolute Total Generation Source by Month",
+       x = "Month",
+       y = "Absolute Total Generation Source")
+
+ggplot(avg_data, aes(x = month, y = avg_abs_total_generation_source)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(title = "Average Absolute Total Generation Source by Month",
+       x = "Month",
+       y = "Average Absolute Total Generation Source")
+
 
 # Plot time series for Solar, thermal and photovoltaic
 plot(data$DATE, data$Solar.Thermal.and.Photovoltaic, type = "l", col= 'orange', pch=16 ,xlab = "Date", ylab = "Generation",
