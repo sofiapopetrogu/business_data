@@ -14,6 +14,8 @@ library(DIMORA)
 library(fpp2)
 library(graphics)
 library(prophet)
+library(lubridate)
+
 
 # read data
 data <- read.csv("data/energy_data.csv", sep = ';', dec = '.')
@@ -98,7 +100,7 @@ post2011_subset_data <- data[data$DATE >= as.Date("2011-01-01"), ]
 # Plot the subset of data
 ggplot(post2011_subset_data, aes(x = DATE, y = total_generation_source)) +
   geom_line(color = "darkblue")+
-  geom_smooth(method = "loess", color = "red", size = 1, span = 0.2) +  # Adjust span
+  geom_smooth(method = "loess", color = "red", size = 1, span = 0.25) +  # Adjust span
   labs(x = "Time",
        y = "Total Energy Generation (MWh)") +
   theme_minimal() +
@@ -122,10 +124,6 @@ ggplot(post2011_subset_data, aes(x = DATE, y = total_generation_source)) +
 # We can see switch from petroleum/non-renewable energy production 
 # to renewable sources starting in 2010
 
-library(lubridate)
-
-library(ggplot2)
-library(dplyr)
 
 # ggplot(data, aes(x = month, y = total_generation_source)) +
 #   geom_line() +
@@ -245,7 +243,7 @@ avg_solar_data <- solar_data %>%
 ggplot(avg_solar_data, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
   geom_bar(stat = "identity", color = "darkblue") +
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Renewables usage") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#f16161'), labels = c('Normal', 'Highest')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#3e6fff'), labels = c('Normal', 'Highest')) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
@@ -277,7 +275,7 @@ ggplot(avg_gas_data, aes(x = factor(month), y = avg_generation, fill = as.charac
   geom_bar(stat = "identity", color = "darkblue")+
   
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Natural Gas usage") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#f16161'), labels = c('Normal', 'Highest')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#3e6fff'), labels = c('Normal', 'Highest')) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
@@ -302,26 +300,25 @@ combined_data = rbind(combined_data, post2011_avg_ren_data)
 combined_data = rbind(combined_data, avg_gas_data)
 print(n=30, combined_data)
 
-ggplot(combined_data, aes(fill = energysource, y = avg_generation, x = month)) +
+ggplot(combined_data, 
+       aes(fill = energysource, y = avg_generation, x = month)) +
   geom_bar(position = 'dodge', stat = 'identity') +
-  scale_fill_manual(values = c("All" = "grey", "Petroleum" = "lightblue", "Renewables" = "green", 'Gas'='orange')) +
+  scale_fill_manual(values = c("All" = "white", "Petroleum" = "#6d93d1", "Renewables" = "#32558c", 'Gas'="#b1c3e0")) +
   labs(
-    title = "Average Generation",
+    title = "Average Generation by Source",
     x = "Month",
     y = "Average Generation (MWh)",
     fill = "Energy Source"
-  ) +
+    ) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, family = 'Lato'),
+    axis.text.x = element_text(angle = 45, hjust = 1, family = 'Helvetica Neue'),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    plot.title = element_text(face = "bold", family = 'Lato'),
-    axis.text.y = element_text(hjust = 1, family = 'Lato')
-  )+
+    plot.title = element_text(face = "bold", family = 'Helvetica Neue'),
+    axis.text.y = element_text(hjust = 1, family = 'Helvetica Neue')
+  ) +
   scale_y_continuous(limits = c(0, 40000), breaks = seq(0, 40000, by = 5000))
 
-
-# TODO: Make Overall Plot to compare average monthly generation by time period and source
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
@@ -333,15 +330,15 @@ max_point <- petroleum_data[which.max(petroleum_data$Petroleum), ]
 
 # Set the x-axis limits to go up to the year 2015
 ggplot(petroleum_data, aes(x = DATE, y = Petroleum, color = "Petroleum")) +
-  geom_line(size = 1.5, color = 'lightblue') +  # Adjust line width and color here
-  geom_point(data = max_point, aes(x = DATE, y = Petroleum), color = 'red', size = 5) +  # Add red point at the max value
-  geom_text(data = max_point, aes(x = DATE, y = Petroleum, label = paste(round(Petroleum, 2), " max point")),
-            vjust = -1, hjust = -0.1, color = 'red', size = 5, family='serif') +  # Display the value of the max point
+  geom_line(size = 1, color = 'darkblue') +  # Adjust line width and color here
+  geom_point(data = max_point, aes(x = DATE, y = Petroleum), color = 'red', size = 3) +  
+  geom_text(data = max_point, aes(x = DATE, y = Petroleum, label = paste("max: ", round(Petroleum, 2))),
+            vjust = 0.2, hjust = -0.3, color = 'black', size = 5, family='serif') +  # Display the value of the max point
   labs(title = "Petroleum Energy Generation",
        x = "Time",
        y = "MWh") +
   theme_minimal() +
-  scale_x_date(limits = c(as.Date('2001-01-01'), as.Date("2012-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") +  # Adjust x-axis limits and labels
+  scale_x_date(limits = c(as.Date('2001-01-01'), as.Date("2015-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") +  # Adjust x-axis limits and labels
   theme(
     panel.grid.major = element_line(color = "white", size = 0.5),  # Adjust major grid lines
     panel.grid.minor = element_blank(),  # Remove minor grid lines
@@ -349,21 +346,17 @@ ggplot(petroleum_data, aes(x = DATE, y = Petroleum, color = "Petroleum")) +
     axis.text = element_text(size = 12, family = "serif"),  # Adjust axis text font size and family
     axis.title = element_text(size = 14, family = "serif", angle = 0),  # Adjust axis title font size and set angle to 0 for horizontal
     axis.line = element_line(color = "black", size = 0.8),  # Adjust axis line color and size
-    axis.ticks = element_line(color = "black")  # Adjust tick marks color
+    axis.ticks = element_line(color = "black"),  # Adjust tick marks color
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels at a 45-degree angle
   ) +
   scale_color_manual(name = "Energy Source", values = c("Petroleum" = "blue"))
-  
 
 # do the same for renewables
 renewable = data$total_renew_source
 
-
-ggplot(data, aes(x = DATE, y = total_renew_source, color = "Petroleum")) +
-  geom_line(size = 1.5, color = 'lightblue') +  # Adjust line width and color here
-  geom_point(data = max_point, aes(x = DATE, y = total_renew_source), color = 'red', size = 5) +  # Add red point at the max value
-  geom_text(data = max_point, aes(x = DATE, y = total_renew_source, label = round(total_renew_source, 2)),
-            vjust = -1, hjust = -0.5, color = 'red', size = 5, family='serif') +  # Display the value of the max point
-  labs(title = "Renewable Energy Generation",
+ggplot(data, aes(x = DATE, y = total_renew_source, color = "Renewable")) +
+  geom_line(size = 1, color = 'darkblue') +  # Adjust line width and color here
+   labs(title = "Renewable Energy Generation",
        x = "Time",
        y = "MWh") +
   theme_minimal() +
@@ -375,9 +368,11 @@ ggplot(data, aes(x = DATE, y = total_renew_source, color = "Petroleum")) +
     axis.text = element_text(size = 12, family = "serif"),  # Adjust axis text font size and family
     axis.title = element_text(size = 14, family = "serif", angle = 0),  # Adjust axis title font size and set angle to 0 for horizontal
     axis.line = element_line(color = "black", size = 0.8),  # Adjust axis line color and size
-    axis.ticks = element_line(color = "black")  # Adjust tick marks color
+    axis.ticks = element_line(color = "black"),  # Adjust tick marks color
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels at a 45-degree angle
   ) +
-  scale_color_manual(name = "Energy Source", values = c("Petroleum" = "blue"))
+  scale_color_manual(name = "Energy Source", values = c("Renewable" = "blue"))
+
 
 
 
@@ -396,15 +391,10 @@ max_point_other_biomass <- renewable[which.max(renewable$Other.Biomass), ]
 max_point_solar <- renewable[which.max(renewable$Solar.Thermal.and.Photovoltaic), ]
 
 
-
-
-
-
-
-
+# NOT SUPER READABLE
 # Set the x-axis limits to go from 2011 to 2022
 ggplot(renewable, aes(x = DATE, fill = "Energy Source")) +
-  geom_bar(aes(y = Natural.Gas), stat = "identity", color = alpha("red", 0.4)) +
+  geom_bar=(aes(y = Natural.Gas), stat = "identity", color = alpha("red", 0.4)) +
   geom_bar(aes(y = Other.Biomass), stat = "identity", color = alpha("lightblue", 0.8)) +
   geom_bar(aes(y = Solar.Thermal.and.Photovoltaic), stat = "identity", color = alpha("orange", 0.4)) +
   geom_point(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, color = "Natural Gas"), size = 5) +
@@ -438,35 +428,18 @@ ggplot(renewable, aes(x = DATE, fill = "Energy Source")) +
     guide = "legend"
   )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Line version of the previous plot
 # Set the x-axis limits to go from 2011 to 2022
 ggplot(renewable, aes(x = DATE, color = "Energy Source")) +
   geom_line(aes(y = Natural.Gas, linetype = "Natural Gas"), size = 1.5, color = alpha("red", 0.4)) +
-  geom_line(aes(y = Other.Biomass, linetype = "Other Biomass"), size = 1.5, color = alpha("lightblue", 0.8)) +
+  geom_line(aes(y = Other.Biomass, linetype = "Biomass"), size = 1.5, color = alpha("lightblue", 0.8)) +
   geom_line(aes(y = Solar.Thermal.and.Photovoltaic, linetype = "Solar"), size = 1.5, color = alpha("orange", 0.4)) +
   geom_point(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, color = "Natural Gas"), size = 5) +
-  geom_point(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, color = "Other Biomass"), size = 5) +
+  geom_point(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, color = "Biomass"), size = 5) +
   geom_point(data = max_point_solar, aes(x = DATE, y = max_value_solar, color = "Solar"), size = 5) +
-  geom_text(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, label = round(max_value_natural_gas, 2)), vjust = -1, hjust = -0.5, size = 5, family='serif', color = "red") +
-  geom_text(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, label = round(max_value_other_biomass, 2)), vjust = -1, hjust = -0.5, size = 5, family='serif', color = "blue") +
-  geom_text(data = max_point_solar, aes(x = DATE, y = max_value_solar, label = round(max_value_solar, 2)), vjust = -1, hjust = -0.5, size = 5, family='serif', color = "orange") +
+  geom_text(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, label = paste("gas max: ", round(max_value_natural_gas, 2))), vjust = 0, hjust = 1.2, size = 4, family='serif', color = "red") +
+  geom_text(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, label = paste("biomass max: ", round(max_value_other_biomass, 2))), vjust = -0.9, hjust = 1.2, size = 4, family='serif', color = "blue") +
+  geom_text(data = max_point_solar, aes(x = DATE, y = max_value_solar, label = paste("solar max: ", round(max_value_solar, 2))), vjust = 0, hjust = 1.1, size = 4, family='serif', color = "orange") +
   labs(title = "Current  Energy Generation",
        x = "Time",
        y = "MWh") +
@@ -482,23 +455,25 @@ ggplot(renewable, aes(x = DATE, color = "Energy Source")) +
     axis.ticks = element_line(color = "black"),
     legend.position = "top",
     legend.title = element_blank(),
-    legend.text = element_text(size = 10)
+    legend.text = element_text(size = 10),
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels at a 45-degree angle
   ) +
   scale_color_manual(
     name = "Energy Source",
-    values = c("Natural Gas" = alpha("red", 1), "Other Biomass" = alpha("blue", 0.8), "Solar" = alpha("orange", 1)),
-    breaks = c("Natural Gas", "Other Biomass", "Solar"),
-    labels = c("Natural Gas", "Other Biomass", "Solar"),
+    values = c("Natural Gas" = alpha("red", 1), "Biomass" = alpha("blue", 0.8), "Solar" = alpha("orange", 1)),
+    breaks = c("Natural Gas", "Biomass", "Solar"),
+    labels = c("Natural Gas", "Biomass", "Solar"),
     guide = "legend"
   ) +
   scale_linetype_manual(
     name = "Energy Source",
-    values = c("Natural Gas" = "solid", "Other Biomass" = "solid", "Solar" = "solid"),
-    breaks = c("Natural Gas", "Other Biomass", "Solar"),
-    labels = c("Natural Gas", "Other Biomass", "Solar"),
+    values = c("Natural Gas" = "solid", "Biomass" = "solid", "Solar" = "solid"),
+    breaks = c("Natural Gas", "Biomass", "Solar"),
+    labels = c("Natural Gas", "Biomass", "Solar"),
     guide = "legend"
-  )
- 
+  ) +
+  scale_y_continuous(limits = c(0, 20000), breaks = seq(0, 20000, by = 2500))
+
 ############################################################################################# OVERALL PLOT
 
 # Melt the data for ggplot
@@ -566,3 +541,4 @@ resfit1<- residuals(fit1)
 plot(resfit1,xlab="Time", ylab="residuals" )
 
 mac.ts<-ts(imac, frequency=4)
+
