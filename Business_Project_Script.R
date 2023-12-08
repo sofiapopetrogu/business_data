@@ -52,9 +52,11 @@ data <- data[valid_indices, ]
 
 summary(data)
 
+
+#FIRST, WE PLOT THE OVERALL TOTAL GENERATION BY SOURCE
 # Plot time series for total generation columns: source
 ggplot(data, aes(x = DATE, y = total_generation_source)) +
-  geom_line(color = "darkblue") +
+  geom_line(color = "darkblue", size=0.55,) +
   labs(x = "Time",
        y = "Total Energy Generation (MWh)") +
   theme_minimal() +
@@ -66,7 +68,7 @@ ggplot(data, aes(x = DATE, y = total_generation_source)) +
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
-
+# NOW WE PLOT DATA BEFORE 2011 TO SEE PETROLEUM
 # Plot data pre 2011 for Petroleum Dominant Market
 
 # Subset data for dates before 2011
@@ -74,7 +76,8 @@ pre2011_subset_data <- data[data$DATE < as.Date("2011-01-01"), ]
 
 # Plot the subset of data before 2011
 ggplot(pre2011_subset_data, aes(x = DATE, y = total_generation_source)) +
-  geom_line(color = "darkblue") +
+  geom_line(color = "darkblue", size=0.6) +
+  geom_smooth(method = "loess", color = "red", size = 1, span = 0.2) +  # Adjust span
   labs(x = "Time",
        y = "Total Energy Generation (MWh)") +
   theme_minimal() +
@@ -86,7 +89,7 @@ ggplot(pre2011_subset_data, aes(x = DATE, y = total_generation_source)) +
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
-# Plot data post 2011 for switch from Petroleum/Non-renewable energy production
+# NOW WE PLOT DATA AFTER 2011 TO SEE THE SWITCH TO GAS AND RENEWABLES
 # Petroleum completely stops in mid 2012
 
 # Subset data for dates starting from 2011
@@ -94,13 +97,15 @@ post2011_subset_data <- data[data$DATE >= as.Date("2011-01-01"), ]
 
 # Plot the subset of data
 ggplot(post2011_subset_data, aes(x = DATE, y = total_generation_source)) +
-  geom_line(color = "darkblue") +
+  geom_line(color = "darkblue")+
+  geom_smooth(method = "loess", color = "red", size = 1, span = 0.2) +  # Adjust span
   labs(x = "Time",
        y = "Total Energy Generation (MWh)") +
   theme_minimal() +
   scale_x_continuous(breaks = seq(min(post2011_subset_data$DATE), max(post2011_subset_data$DATE), by = "year"),
                      labels = format(seq(min(post2011_subset_data$DATE), max(post2011_subset_data$DATE), by = "year"),  "%Y"),
                      expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, 90000), breaks = seq(0, 90000, by = 5000))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         axis.line = element_line(color = "black"),
         panel.grid.major = element_blank(),
@@ -149,7 +154,7 @@ summary(data$total_generation_source)
 hist(data$total_generation_source)
 
 
-# Average monthly energy generation from all producers all years
+# Average monthly energy generation
 avg_data <- data %>%
   group_by(month = factor(month)) %>%
   summarise(avg_generation = mean(total_generation_source, na.rm = TRUE)) %>%
@@ -160,7 +165,7 @@ avg_data$energysource = 'All'
 ggplot(avg_data, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
   geom_bar(stat = "identity", color = "darkblue") +
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Generation") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = 'blue'), labels = c('Other seasons', 'Summer')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#3e6fff'), labels = c('Other seasons', 'Summer')) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
@@ -190,7 +195,7 @@ pre2011_avg_pet_data$energysource = 'Petroleum'
 ggplot(pre2011_avg_pet_data, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
   geom_bar(stat = "identity", color = "darkblue") +
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Petroleum usage") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#f16161'), labels = c('Other seasons', 'Summer')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#3e6fff'), labels = c('Other seasons', 'Summer')) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
@@ -208,7 +213,7 @@ ggplot(pre2011_avg_pet_data, aes(x = factor(month), y = avg_generation, fill = a
 post2011_avg_ren_data <- post2011_subset_data %>%
   group_by(month) %>%
   summarise(avg_generation = mean(total_renew_source, na.rm = TRUE)) %>%
-  mutate(highlight_flag = ifelse(avg_generation > 3600, TRUE, FALSE))
+  mutate(highlight_flag = ifelse(avg_generation > 3500, TRUE, FALSE))
 
 post2011_avg_ren_data$energysource = 'Renewables'
 
@@ -216,7 +221,7 @@ post2011_avg_ren_data$energysource = 'Renewables'
 ggplot(post2011_avg_ren_data, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
   geom_bar(stat = "identity", color = "darkblue") +
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Renewables usage") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#f16161'), labels = c('Normal', 'Highest')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#3e6fff'), labels = c('Normal', 'Highest')) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
@@ -269,7 +274,8 @@ avg_gas_data$energysource = 'Gas'
 
 
 ggplot(avg_gas_data, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
-  geom_bar(stat = "identity", color = "darkblue") +
+  geom_bar(stat = "identity", color = "darkblue")+
+  
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Natural Gas usage") +
   scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#f16161'), labels = c('Normal', 'Highest')) +
   theme(
