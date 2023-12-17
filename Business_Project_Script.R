@@ -394,7 +394,7 @@ max_point_solar <- renewable[which.max(renewable$Solar.Thermal.and.Photovoltaic)
 # NOT SUPER READABLE
 # Set the x-axis limits to go from 2011 to 2022
 ggplot(renewable, aes(x = DATE, fill = "Energy Source")) +
-  geom_bar=(aes(y = Natural.Gas), stat = "identity", color = alpha("red", 0.4)) +
+  geom_bar(aes(y = Natural.Gas), stat = "identity", color = alpha("red", 0.4)) +
   geom_bar(aes(y = Other.Biomass), stat = "identity", color = alpha("lightblue", 0.8)) +
   geom_bar(aes(y = Solar.Thermal.and.Photovoltaic), stat = "identity", color = alpha("orange", 0.4)) +
   geom_point(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, color = "Natural Gas"), size = 5) +
@@ -495,7 +495,7 @@ ggplot(energy_data_melted, aes(x = DATE, y = value, fill = variable)) +
 
 # Plot time series Combined Heat and Power. Commercial Power
 plot(data$DATE, data$Combined.Heat.and.Power..Commercial.Power, type = "l", col= 'orange', pch=16 ,xlab = "Date", ylab = "Generation",
-     main = "Time Series Combined Heat and Power. Commercial Power", ylim = c(0, 20000))
+     main = "Time Series Combined Heat and Power. Commercial Power", ylim = c(0, 20000))+
 legend('topright', legend = 'Solar | Theremal | Photovoltaic', col = 'orange', lty=1)
 
 #TODO: check the correlation with commercial customers
@@ -516,6 +516,116 @@ legend('topright', legend = 'Generation of electric power', col = 'orange', lty=
 plot(data$DATE, data$Electric.Generators..Independent.Power.Producers, type = "l", col= 'orange', pch=16 ,xlab = "Date", ylab = "Generation",
      main = "Time Series Electric Generators | electric utilities", ylim = c(0, 100000))
 legend('topright', legend = 'Generation of electric power', col = 'orange', lty=1)
+
+
+
+
+#################################################### CUSTOMERS
+
+
+
+# Assuming 'filtered_residential', 'filtered_commercial', 'filtered_industrial', and 'filtered_transportation' 
+# are data frames with appropriate columns
+
+library(ggplot2)
+
+# Function to create a common theme
+custom_theme <- function() {
+  theme_minimal() +
+    theme(legend.position = 'bottom',
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          axis.line = element_line(color = 'black'))
+}
+
+# Plot for Customers_residential
+ggplot(filtered_residential, aes(x = DATE, y = Customers_residential)) +
+  geom_line(colour = 'orange', pch = 16) +
+  labs(x = "Date", y = "Number of customers", title = "Residential's customers") +
+  scale_y_continuous(limits = c(0, max(filtered_residential$Customers_residential))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
+
+# Plot for Customers_commercial
+ggplot(filtered_commercial, aes(x = DATE, y = Customers_commercial)) +
+  geom_line(colour = 'blue', pch = 16) +
+  labs(x = "Date", y = "Number of customers", title = "Commercial's customers") +
+  scale_y_continuous(limits = c(0, max(filtered_commercial$Customers_commercial))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
+
+# Plot for Customers_industrial
+ggplot(filtered_industrial, aes(x = DATE, y = Customers_industrial)) +
+  geom_line(colour = 'green', pch = 16) +
+  labs(x = "Date", y = "Number of customers", title = "Industrial's customers") +
+  scale_y_continuous(limits = c(0, max(filtered_industrial$Customers_industrial))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
+
+# Plot for Customers_transportation
+ggplot(filtered_transportation, aes(x = DATE, y = Customers_transportation)) +
+  geom_line(colour = 'red', pch = 16) +
+  labs(x = "Date", y = "Number of customers", title = "Transportation's customers") +
+  scale_y_continuous(limits = c(0, max(filtered_transportation$Customers_transportation))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
+
+
+
+
+
+#######################################################à SALES AND MONEYYY
+
+# Plot for Residential
+ggplot(data, aes(x = DATE, y = Sales_residential)) +
+  geom_line(colour = 'red') +
+  labs(x = "Date", y = "Number of customers", title = "Transportation's customers") +
+  scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
+
+# Plot for Commercial Sales
+ggplot(data, aes(x = DATE, y = Sales_commercial)) +
+  geom_line(colour = 'blue') +
+  labs(x = "Date", y = "Sales", title = "Commercial Sales") +
+  scale_y_continuous(limits = c(0, max(data$Sales_commercial))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
+
+# Plot for Industrial Sales
+ggplot(data, aes(x = DATE, y = Sales_industrial)) +
+  geom_line(colour = 'green') +
+  labs(x = "Date", y = "Sales", title = "Industrial Sales") +
+  scale_y_continuous(limits = c(0, max(data$Sales_industrial))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
+
+# Plot for Transportation Sales
+ggplot(data, aes(x = DATE, y = Sales_transportation)) +
+  geom_line(colour = 'red') +
+  labs(x = "Date", y = "Sales", title = "Transportation Sales") +
+  scale_y_continuous(limits = c(0, max(data$Sales_transportation))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
+
+
+
+# Plot for Total Sales
+ggplot(data, aes(x = DATE, y = Sales_total)) +
+  geom_line(colour = 'red') +
+  labs(x = "Date", y = "Sales", title = "Total Sales") +
+  scale_y_continuous(limits = c(0, max(data$Sales_total))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
+
+
+
+
+
+
+
+
 
 ## Assess Autocorrelations 
 
