@@ -522,12 +522,11 @@ legend('topright', legend = 'Generation of electric power', col = 'orange', lty=
 
 #################################################### CUSTOMERS
 
-
-
-# Assuming 'filtered_residential', 'filtered_commercial', 'filtered_industrial', and 'filtered_transportation' 
-# are data frames with appropriate columns
-
-library(ggplot2)
+filtered_residential <- data[data$Customers_residential > 0, ]
+filtered_commercial <- data[data$Customers_commercial > 0, ]
+filtered_industrial <- data[data$Customers_industrial > 0, ]
+filtered_transportation <- data[data$Customers_transportation > 0, ]
+filtered_total <- data[data$Customers_total > 0, ]
 
 # Function to create a common theme
 custom_theme <- function() {
@@ -539,9 +538,10 @@ custom_theme <- function() {
           axis.line = element_line(color = 'black'))
 }
 
+
 # Plot for Customers_residential
 ggplot(filtered_residential, aes(x = DATE, y = Customers_residential)) +
-  geom_line(colour = 'orange', pch = 16) +
+  geom_line(colour = 'orange') +
   labs(x = "Date", y = "Number of customers", title = "Residential's customers") +
   scale_y_continuous(limits = c(0, max(filtered_residential$Customers_residential))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -549,7 +549,7 @@ ggplot(filtered_residential, aes(x = DATE, y = Customers_residential)) +
 
 # Plot for Customers_commercial
 ggplot(filtered_commercial, aes(x = DATE, y = Customers_commercial)) +
-  geom_line(colour = 'blue', pch = 16) +
+  geom_line(colour = 'blue') +
   labs(x = "Date", y = "Number of customers", title = "Commercial's customers") +
   scale_y_continuous(limits = c(0, max(filtered_commercial$Customers_commercial))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -557,7 +557,7 @@ ggplot(filtered_commercial, aes(x = DATE, y = Customers_commercial)) +
 
 # Plot for Customers_industrial
 ggplot(filtered_industrial, aes(x = DATE, y = Customers_industrial)) +
-  geom_line(colour = 'green', pch = 16) +
+  geom_line(colour = 'green') +
   labs(x = "Date", y = "Number of customers", title = "Industrial's customers") +
   scale_y_continuous(limits = c(0, max(filtered_industrial$Customers_industrial))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -565,9 +565,17 @@ ggplot(filtered_industrial, aes(x = DATE, y = Customers_industrial)) +
 
 # Plot for Customers_transportation
 ggplot(filtered_transportation, aes(x = DATE, y = Customers_transportation)) +
-  geom_line(colour = 'red', pch = 16) +
+  geom_line(colour = 'red') +
   labs(x = "Date", y = "Number of customers", title = "Transportation's customers") +
   scale_y_continuous(limits = c(0, max(filtered_transportation$Customers_transportation))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
+
+# Plot for Customers_transportation
+ggplot(filtered_total, aes(x = DATE, y = Customers_total)) +
+  geom_line(colour = 'red') +
+  labs(x = "Date", y = "Number of customers", title = "Transportation's customers") +
+  scale_y_continuous(limits = c(0, max(filtered_total$Customers_total))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
@@ -619,19 +627,78 @@ ggplot(data, aes(x = DATE, y = Sales_total)) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
+# Average x month TOTAL
+sales_data <- subset(data, Sales_total > 0)
+
+avg_sales_month <- sales_data %>%
+  group_by(month) %>%
+  summarise(avg_sales = mean(Sales_total, na.rm = TRUE)) %>%
+  mutate(highlight_flag = ifelse(avg_sales > 100500, TRUE, FALSE))
+
+
+ggplot(avg_sales_month, aes(x = factor(month), y = avg_sales, fill = as.character(highlight_flag))) +
+  geom_bar(stat = "identity", color = "darkblue") +
+  labs(x = "Month", y = "Avg. Sales", fill = "Sales") +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c('Normal', 'Highest')) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    text = element_text(hjust = 1, family = 'Helvetica Neue'),
+    title = element_text(face = 'bold')
+  ) +
+  scale_y_continuous(limits = c(0, 1500000), breaks = seq(0, max(avg_sales_month$avg_sales) + 10000, by = 100000)) +
+  geom_text(data = filter(avg_sales_month, month == "lug"),
+            aes(x = month, y = avg_sales, label = round(avg_sales)),
+            vjust = -0.5, color = "black", size = 6)
 
 
 
+########################### PRICE plotting
+
+ggplot(data, aes(x = DATE, y = Price_total)) +
+  geom_line(colour = 'darkgreen') +
+  geom_vline(xintercept = as.numeric(as.Date("2005-01-01")), linetype='dashed',color='blue')+
+  geom_vline(xintercept = as.numeric(as.Date("2013-01-01")), linetype='dashed',color='blue')+
+  geom_vline(xintercept = as.numeric(as.Date("2021-01-01")), linetype='dashed',color='blue')+
+  labs(x = "Date", y = "Price", title = "Price over time") +
+  scale_y_continuous(limits = c(0, max(data$Price_total)), breaks = seq(0, max(data$Price_total), by = 2)) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  theme_minimal() +
+  custom_theme()
 
 
+############################ Assess Autocorrelations 
+
+acf(data$Sales_total, main='Autocorrelation for sales')
+acf(data$total_generation_source, main='Autocorrelation for energy generation')
+acf(data$Solar.Thermal.and.Photovoltaic)  #WEIRD#
+acf(data$Sales_transportation) # trend
+acf(data$Sales_residential) # Seasonal
+acf(data$Price_total)
 
 
+########################### Correlation matrices
+# Initialize an empty data frame for numerical columns
+numerical_data <- data.frame()
 
-## Assess Autocorrelations 
+# Create a new data frame with only numerical columns
+numerical_data <- data %>%
+  select_if(is.numeric)
 
-##acf of variable "gmwh"
+# Print the new data frame with numerical columns
+print(numerical_data)
 
-Acf(gmwh)
+cor_matrix = cor(numerical_data)
+
+library(corrplot)
+
+color_palette = colorRampPalette(c("#BB4444","#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+
+corrplot(cor_matrix, method = "circle", tl.cex = 0.7, cl.cex = 0.7)
+
+
 
 # Models
 
