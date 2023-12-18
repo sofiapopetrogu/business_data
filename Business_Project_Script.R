@@ -696,7 +696,44 @@ library(corrplot)
 
 color_palette = colorRampPalette(c("#BB4444","#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
 
-corrplot(cor_matrix, method = "circle", tl.cex = 0.7, cl.cex = 0.7)
+corrplot(cor_matrix, method = "number", tl.cex = 0.7, cl.cex = 0.8, number.cex = 0.3)
+
+
+
+# Function to filter correlated values and create a list of tuples
+filter_correlation <- function(cor_matrix, threshold = 0.5) {
+  correlated_list <- list()
+  
+  for (col in colnames(cor_matrix)) {
+    correlated_cols <- colnames(cor_matrix)[cor_matrix[, col] > threshold | cor_matrix[, col] < -threshold]
+    correlated_tuples <- data.frame(label = character(0), correlation = numeric(0), stringsAsFactors = FALSE)
+    
+    for (cor_col in correlated_cols) {
+      correlation_value <- cor_matrix[cor_col, col]
+      correlated_tuples <- rbind(correlated_tuples, list(label = cor_col, correlation = correlation_value))
+    }
+    
+    correlated_list[[col]] <- as.list(correlated_tuples)
+  }
+  
+  return(correlated_list)
+}
+
+# Filter correlation matrix for values > 0.5 or < -0.5
+filtered_cor_matrix <- cor_matrix * (abs(cor_matrix) > 0.5)
+
+# Create a list of correlated tuples for each variable
+correlated_tuples <- filter_correlation(filtered_cor_matrix)
+
+# Print the list of correlated tuples
+print(correlated_tuples)
+
+
+
+
+
+
+
 
 
 
