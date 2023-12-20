@@ -32,7 +32,7 @@ head(data)
 # Add total generation columns
 
 
-# negative values in generation indicate independent power producer
+# negative values in generation found only in independent power producer
 # example: solar power producers relying on sunlight might require independent power sources/producers
 # on non-sunny days
 
@@ -484,7 +484,7 @@ energy_data_melted <- melt(data, id.vars = "DATE", measure.vars = c('Natural.Gas
 ggplot(energy_data_melted, aes(x = DATE, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "stack", color = "black") +
   labs(title = "Energy Generation Over Time",
-       x = "Date",
+       x = "Time",
        y = "Energy Generated (MWh)",
        fill = "Energy Source") +
   theme_minimal()
@@ -522,6 +522,9 @@ legend('topright', legend = 'Generation of electric power', col = 'orange', lty=
 
 #################################################### CUSTOMERS
 
+# Note about customers: when customers = 0, this doesn't make sense. Likely
+# data was not being accuractely collected then
+# Starting in 2007, data collection begins to become more reliable
 filtered_residential <- data[data$Customers_residential > 0, ]
 filtered_commercial <- data[data$Customers_commercial > 0, ]
 filtered_industrial <- data[data$Customers_industrial > 0, ]
@@ -538,27 +541,28 @@ custom_theme <- function() {
           axis.line = element_line(color = 'black'))
 }
 
-
-# Plot for Customers_residential
+# option to remove scientific notation
+options(scipen = 999)
+# Plot for Customers_residential (houses)
 ggplot(filtered_residential, aes(x = DATE, y = Customers_residential)) +
   geom_line(colour = 'orange') +
-  labs(x = "Date", y = "Number of customers", title = "Residential's customers") +
+  labs(x = "Time", y = "Number of customers", title = "Residential's customers") +
   scale_y_continuous(limits = c(0, max(filtered_residential$Customers_residential))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
-# Plot for Customers_commercial
+# Plot for Customers_commercial (malls, businesses)
 ggplot(filtered_commercial, aes(x = DATE, y = Customers_commercial)) +
   geom_line(colour = 'blue') +
-  labs(x = "Date", y = "Number of customers", title = "Commercial's customers") +
+  labs(x = "Time", y = "Number of customers", title = "Commercial's customers") +
   scale_y_continuous(limits = c(0, max(filtered_commercial$Customers_commercial))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
-# Plot for Customers_industrial
+# Plot for Customers_industrial (factory)
 ggplot(filtered_industrial, aes(x = DATE, y = Customers_industrial)) +
   geom_line(colour = 'green') +
-  labs(x = "Date", y = "Number of customers", title = "Industrial's customers") +
+  labs(x = "Time", y = "Number of customers", title = "Industrial's customers") +
   scale_y_continuous(limits = c(0, max(filtered_industrial$Customers_industrial))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
@@ -566,15 +570,15 @@ ggplot(filtered_industrial, aes(x = DATE, y = Customers_industrial)) +
 # Plot for Customers_transportation
 ggplot(filtered_transportation, aes(x = DATE, y = Customers_transportation)) +
   geom_line(colour = 'red') +
-  labs(x = "Date", y = "Number of customers", title = "Transportation's customers") +
+  labs(x = "Time", y = "Number of customers", title = "Transportation's customers") +
   scale_y_continuous(limits = c(0, max(filtered_transportation$Customers_transportation))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
-# Plot for Customers_transportation
+# Plot for Customers_transportation (cars, trucks, trains, planes, and boats)
 ggplot(filtered_total, aes(x = DATE, y = Customers_total)) +
   geom_line(colour = 'red') +
-  labs(x = "Date", y = "Number of customers", title = "Transportation's customers") +
+  labs(x = "Time", y = "Number of customers", title = "Transportation's customers") +
   scale_y_continuous(limits = c(0, max(filtered_total$Customers_total))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
@@ -586,17 +590,20 @@ ggplot(filtered_total, aes(x = DATE, y = Customers_total)) +
 #######################################################à SALES AND MONEYYY
 
 # Plot for Residential
+# seasonality and residential consumption has upward trend with variability
 ggplot(data, aes(x = DATE, y = Sales_residential)) +
   geom_line(colour = 'red') +
-  labs(x = "Date", y = "Number of customers", title = "Transportation's customers") +
+  labs(x = "Time", y = "MWh", title = "Residential consumption") +
   scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
+# note to look for monthly or annual population data in DC
+
 
 # Plot for Commercial Sales
 ggplot(data, aes(x = DATE, y = Sales_commercial)) +
   geom_line(colour = 'blue') +
-  labs(x = "Date", y = "Sales", title = "Commercial Sales") +
+  labs(x = "Time", y = "MWh", title = "Commercial Sales") +
   scale_y_continuous(limits = c(0, max(data$Sales_commercial))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
@@ -604,7 +611,7 @@ ggplot(data, aes(x = DATE, y = Sales_commercial)) +
 # Plot for Industrial Sales
 ggplot(data, aes(x = DATE, y = Sales_industrial)) +
   geom_line(colour = 'green') +
-  labs(x = "Date", y = "Sales", title = "Industrial Sales") +
+  labs(x = "Time", y = "MWh", title = "Industrial Sales") +
   scale_y_continuous(limits = c(0, max(data$Sales_industrial))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
@@ -612,17 +619,16 @@ ggplot(data, aes(x = DATE, y = Sales_industrial)) +
 # Plot for Transportation Sales
 ggplot(data, aes(x = DATE, y = Sales_transportation)) +
   geom_line(colour = 'red') +
-  labs(x = "Date", y = "Sales", title = "Transportation Sales") +
+  labs(x = "Time", y = "MWh", title = "Transportation Sales") +
   scale_y_continuous(limits = c(0, max(data$Sales_transportation))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
 
-
 # Plot for Total Sales
 ggplot(data, aes(x = DATE, y = Sales_total)) +
   geom_line(colour = 'red') +
-  labs(x = "Date", y = "Sales", title = "Total Sales") +
+  labs(x = "Time", y = "MWh", title = "Total Sales") +
   scale_y_continuous(limits = c(0, max(data$Sales_total))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
@@ -654,6 +660,8 @@ ggplot(avg_sales_month, aes(x = factor(month), y = avg_sales, fill = as.characte
             vjust = -0.5, color = "black", size = 6)
 
 
+#TODO Avg Sales for residential and commercial sales after 2012 (customers column filled)
+
 
 ########################### PRICE plotting
 
@@ -662,7 +670,7 @@ ggplot(data, aes(x = DATE, y = Price_total)) +
   geom_vline(xintercept = as.numeric(as.Date("2005-01-01")), linetype='dashed',color='blue')+
   geom_vline(xintercept = as.numeric(as.Date("2013-01-01")), linetype='dashed',color='blue')+
   geom_vline(xintercept = as.numeric(as.Date("2021-01-01")), linetype='dashed',color='blue')+
-  labs(x = "Date", y = "Price", title = "Price over time") +
+  labs(x = "Time", y = "Average Price (cents/kWh)", title = "Price over time") +
   scale_y_continuous(limits = c(0, max(data$Price_total)), breaks = seq(0, max(data$Price_total), by = 2)) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   theme_minimal() +
