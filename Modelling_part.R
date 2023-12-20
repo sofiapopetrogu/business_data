@@ -29,7 +29,7 @@ str(data)
 
 
 # Initialize an empty data frame for numerical columns
-numerical_data <- data.frame()
+numerical_data <- data[data$DATE >= as.Date('2012-01-01'),]
 
 # Create a new data frame with only numerical columns
 numerical_data <- data %>%
@@ -56,7 +56,7 @@ mod_lm = gam(Price_total ~ Customers_total, data=data)
 summary(mod_lm)
 
 
-mod_gam1 = gam(Price_total ~ s(Customers_total, bs='cr'), data=data)
+mod_gam1 = gam(Price_total ~ s(Other.Biomass, bs='cr'), data=data)
 summary(mod_gam1)
 
 plot(mod_gam1)
@@ -88,6 +88,19 @@ gratia::draw(mod_gam2)
 
 mod_gamdef = lm(Price_total ~ ., data=train_set)
 summary(mod_gamdef)                 
+
+
+data.ts= ts(data$Price_total, frequency = 1)
+customers.ts = ts(data$Customers_total, frequency=1)
+fit1 = tslm(data.ts ~ customers.ts)
+summary(fit1)
+
+plot(data.ts, type='l', xlab='month',ylab='price')
+abline(fit1)
+
+# check residuals
+res1=residuals(fit1)
+plot(res1, type='l', xlab='month',ylab='price')
 
 
 mod_tslm = tslm(Price_total ~ trend+season+data$Customers_total, data=data)

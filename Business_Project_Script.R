@@ -567,7 +567,7 @@ ggplot(filtered_industrial, aes(x = DATE, y = Customers_industrial)) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
-# Plot for Customers_transportation
+# Plot for Customers_transportation (cars, trucks, trains, planes, and boats)
 ggplot(filtered_transportation, aes(x = DATE, y = Customers_transportation)) +
   geom_line(colour = 'red') +
   labs(x = "Time", y = "Number of customers", title = "Transportation's customers") +
@@ -575,7 +575,7 @@ ggplot(filtered_transportation, aes(x = DATE, y = Customers_transportation)) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
-# Plot for Customers_transportation (cars, trucks, trains, planes, and boats)
+# Plot for Total 
 ggplot(filtered_total, aes(x = DATE, y = Customers_total)) +
   geom_line(colour = 'red') +
   labs(x = "Time", y = "Number of customers", title = "Transportation's customers") +
@@ -677,11 +677,25 @@ ggplot(data, aes(x = DATE, y = Price_total)) +
   custom_theme()
 
 
+ggplot(data, aes(x = DATE, y = Price_residential)) +
+  geom_line(colour = 'darkgreen') +
+  geom_vline(xintercept = as.numeric(as.Date("2005-01-01")), linetype='dashed',color='blue')+
+  geom_vline(xintercept = as.numeric(as.Date("2013-01-01")), linetype='dashed',color='blue')+
+  geom_vline(xintercept = as.numeric(as.Date("2021-01-01")), linetype='dashed',color='blue')+
+  labs(x = "Time", y = "Average Price (cents/kWh)", title = "Price over time") +
+  scale_y_continuous(limits = c(0, max(data$Price_total)), breaks = seq(0, max(data$Price_total), by = 2)) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  theme_minimal() +
+  custom_theme()
+
+
 ############################ Assess Autocorrelations 
+
+
 
 acf(data$Sales_total, main='Autocorrelation for sales')
 acf(data$total_generation_source, main='Autocorrelation for energy generation')
-acf(data$Solar.Thermal.and.Photovoltaic)  #WEIRD#
+acf(data[data$Solar.Thermal.and.Photovoltaic > 0,]$Solar.Thermal.and.Photovoltaic)  #WEIRD#
 acf(data$Sales_transportation) # trend
 acf(data$Sales_residential) # Seasonal
 acf(data$Price_total)
@@ -689,7 +703,9 @@ acf(data$Price_total)
 
 ########################### Correlation matrices
 # Initialize an empty data frame for numerical columns
-numerical_data <- data.frame()
+numerical_data <- data[data$DATE >= as.Date('2012-01-01'),]
+
+str(numerical_data)
 
 # Create a new data frame with only numerical columns
 numerical_data <- data %>%
