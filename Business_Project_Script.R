@@ -808,6 +808,25 @@ mac.ts<-ts(imac, frequency=4)
 # Randomly pick starting index for training set: start_index =  sample(1:500, 1)
 # Create training set: fit_size = 60 # 5 years /n train_ts = car_ts[start_index:(start_index+fit_size-1)]
 # Create test set: test_size = 10 /n test_ts = car_ts[(start_index+fit_size):(start_index+fit_size+test_size-1)]
+# Re-fit the previously found model on the defined window of data
+# Forecast with fitted model: pred_arima_partial = forecast(arima_partial, h = test_size)
+# Plot predictions: c(arima_partial$fitted, pred_arima_partial$mean)
+
+# Lagged Regressors
+
+# Overall Schematic of Project
+# 1. Describe story of energy generation and consumption for electricity in DC 
+# 2. Analyze series of residential consumption (sales) in DC
+# 3. Add other explanatory variables: residential customers, avg price, generation and modify time series with sales
+# 4. Focus on timeframe from 2012-2022 since data is more reliable then and there is the transition from Petroleum to alternatives and renewables
+# 5. Add other series for more information: temperature data
+# 6. analyze correlations with all the variables
+# 7. improve tslm models
+# 8. Models with Lagged Regressors
+# 9. Determine Final Model (could be tslm, GBM, etc...)
+# 10. Forecasting using ARIMA and exponential smoothing
+# 11. Find correlations and optimal lags for forecasting
+# 12. Try to make forecasts with the Final Model
 
 
 
