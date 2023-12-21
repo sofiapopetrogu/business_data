@@ -21,7 +21,7 @@ library(readxl)
 library(plotly)
 library(gridExtra)
 
-
+options(scipen = 999)
 # read data
 data <- read.csv("data/energy_data.csv", sep = ';', dec = '.')
 
@@ -777,25 +777,114 @@ plot(resfit1,xlab="Time", ylab="residuals" )
 mac.ts<-ts(imac, frequency=4)
 
 
-# Notes for Model Running with Residential Sales as Primary Response Variable:
+# 2. ANALYZE SERIES OF RESIDENTIAL (MWh) SALES IN DC 
 
 # Plotting time series: 
-# Run Acf: ggAcf(car_sales$CarSales)
-# Run pAcf: ggPacf(car_sales$CarSales)
-# represent our data as a time series: car_ts = ts(car_sales$CarSales, frequency = 12)
+p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
+              geom_line() +
+              labs(x = "Time", y = "MWh", title = "Residential consumption") +
+              scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
+              scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+              custom_theme()
+
+ggplotly(p_ressales)
+
+# Observations:
+# appears to be prominent seasonality 
+# slightly increasing trend with a spike in Jan 2015 
+
+# Run Acf: 
+Acf(data$Sales_residential, main='Autocorrelation for Residential Sales')
+# The lack of decay in the autocorrelation at the seasonal lags 
+# may suggest a strong and persistent seasonality in the data
+
+# Run pAcf:
+Pacf(data$Sales_residential, main='Partial autocorrelation for Residential Sales')
+# more gradual decay in the partial autocorrelation indicates that 
+# some of the observed correlation at shorter lags can be explained 
+# by the correlations at longer lags. 
+# This is typical in the presence of a combination of trend and seasonality
+
+# MODELS 
 
 # Linear Regression
-# First model with only the trend: tslm_t = tslm(car_ts ~ trend) \n summary(tslm_t)
+
+# represent our data as a time series: 
+ressales_ts = ts(data$Sales_residential, frequency = 12)
+
+# First model with only the trend: 
+tslm_t = tslm(ressales_ts ~ trend)
+summary(tslm_t)
+
+# Trend is significant but R2 is bad
+# R-squared = 0.2221; F = 74.79 with 262 df; p < 0.0001
+
 # plot real values against fitted values and plot residuals as well
-# Second model with the trend and the seasonality: tslm_ts = tslm(car_ts ~ trend+season) \n summary(tslm_ts)
-# plot real values against fitted values and plot residuals as well
-# Run DW Test on timeseries: dwtest(tslm_t) and dwtest(tslm_ts)
+p_tslm_t <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
+            geom_line() +
+            labs(x = "Time", y = "Residential Sales (MWh)", title = "Real TimeSeries vs Fitted Values TSLM") +
+            scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
+            scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+            custom_theme() +
+            geom_line(aes(y = fitted(tslm_t)), 
+                      color="darkred", linetype="twodash") 
+
+ggplotly(p_tslm_t)
+
+p_tslm_res <- ggplot(data, aes(x = DATE, y = residuals(tslm_t))) +
+              geom_point()+
+              labs(x = "Time", y = "Residuals", title = "Residuals of TSLM with Trend")
+
+ggplotly(p_tslm_res)
+
+# As we can see, importance of seasonality and that outlier spike in 2015 emerges 
+
+# Second model with the trend and the seasonality: 
+
+tslm_ts <- tslm(ressales_ts ~ trend+season) 
+summary(tslm_ts)
+# Trend is significant and R2 has drastically improved 
+# R-squared = 0.7941; F = 80.65 with 251 df; p < 0.0001
+
+# plot real values against fitted values and also residuals
+p_tslm_ts <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
+  geom_line() +
+  labs(x = "Time", y = "Residential Sales (MWh)", title = "Real TimeSeries vs Fitted Values TSLM") +
+  scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme() +
+  geom_line(aes(y = fitted(tslm_ts)), 
+            color="darkred", linetype="twodash") 
+
+ggplotly(p_tslm_ts)
+
+p_tslm_ts_res <- ggplot(data, aes(x = DATE, y = residuals(tslm_ts))) +
+  geom_point()+
+  labs(x = "Time", y = "Residuals", title = "Residuals of TSLM with Trend and Season")
+
+ggplotly(p_tslm_ts_res)
+# residuals much closer to 0
+
+# tslm with trend and season seems to capture trend fairly well and is a good starting point
+
+# Run DW Test on timeseries:
+dwtest(tslm_t) # DW = 1.199, p<0.0001
+dwtest(tslm_ts) # DW = 1.7889, p-value < 0.05
+
+# DW statistic ranges from 0 to 4. Test detects presences of autocorrelation
+# in residuals (errors) of a model. Autocorrelation in residuals indicates 
+# systematic pattern in unexplained variation in data points, which violates
+# assumptions of independence
+# DW = 2: no sig autocorrelation - desired
+# DW < 2: pos autocorrelation in residuals, consecutive residuals tend to have similar values
 
 ### QUESTION: DOES IT MAKE SENSE TO FIT A BASS MODEL HERE?
 # The assumption of the Bass Model is product growth
 
 # ARIMA Models
-# Differencing required before running ARIMA: car_ts_df = diff(car_ts)
+# Differencing required before running ARIMA: 
+ressales_ts_df <- diff(ressales_ts)
+
 # Plot differentiated data to check for stationarity: autoplot(car_ts_df, xlab = "Time", ylab = "CarSales")
 # Residuals of differentiated series: p_acf_df = ggAcf(car_ts_df)
 # Residuals of differentiated series: ggPacf(car_ts_df)
@@ -827,6 +916,12 @@ mac.ts<-ts(imac, frequency=4)
 # 10. Forecasting using ARIMA and exponential smoothing
 # 11. Find correlations and optimal lags for forecasting
 # 12. Try to make forecasts with the Final Model
+
+# Models to test:
+# Seasonal-Trend decomposition using LOESS
+# Seasonal Autoregressive Integrated Moving Average (SARIMA)
+# Seasonal Exponential Smoothing (ETS)
+# XGBoost and LightGBM Boosting Algorithms
 
 
 
