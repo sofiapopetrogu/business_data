@@ -16,6 +16,11 @@ library(graphics)
 library(prophet)
 library(lubridate)
 
+library(qtl2)
+library(readxl)
+library(plotly)
+library(gridExtra)
+
 
 # read data
 data <- read.csv("data/energy_data.csv", sep = ';', dec = '.')
@@ -752,15 +757,6 @@ correlated_tuples <- filter_correlation(filtered_cor_matrix)
 # Print the list of correlated tuples
 print(correlated_tuples)
 
-
-
-
-
-
-
-
-
-
 # Models
 
 ## Linear Regression
@@ -779,4 +775,44 @@ resfit1<- residuals(fit1)
 plot(resfit1,xlab="Time", ylab="residuals" )
 
 mac.ts<-ts(imac, frequency=4)
+
+
+# Notes for Model Running with Residential Sales as Primary Response Variable:
+
+# Plotting time series: 
+# Run Acf: ggAcf(car_sales$CarSales)
+# Run pAcf: ggPacf(car_sales$CarSales)
+# represent our data as a time series: car_ts = ts(car_sales$CarSales, frequency = 12)
+
+# Linear Regression
+# First model with only the trend: tslm_t = tslm(car_ts ~ trend) \n summary(tslm_t)
+# plot real values against fitted values and plot residuals as well
+# Second model with the trend and the seasonality: tslm_ts = tslm(car_ts ~ trend+season) \n summary(tslm_ts)
+# plot real values against fitted values and plot residuals as well
+# Run DW Test on timeseries: dwtest(tslm_t) and dwtest(tslm_ts)
+
+### QUESTION: DOES IT MAKE SENSE TO FIT A BASS MODEL HERE?
+# The assumption of the Bass Model is product growth
+
+# ARIMA Models
+# Differencing required before running ARIMA: car_ts_df = diff(car_ts)
+# Plot differentiated data to check for stationarity: autoplot(car_ts_df, xlab = "Time", ylab = "CarSales")
+# Residuals of differentiated series: p_acf_df = ggAcf(car_ts_df)
+# Residuals of differentiated series: ggPacf(car_ts_df)
+# Build first ARIMA models, testing diff combos for p, d, q: arima = Arima(car_ts, order = c(0,1,2), seasonal = c(0,1,2))
+# Try auto arima
+# Residuals obtained by the arima model: residuals(arima)
+# More info about residuals: checkresiduals(arima)
+
+# Forecast with ARIMA
+# Randomly pick starting index for training set: start_index =  sample(1:500, 1)
+# Create training set: fit_size = 60 # 5 years /n train_ts = car_ts[start_index:(start_index+fit_size-1)]
+# Create test set: test_size = 10 /n test_ts = car_ts[(start_index+fit_size):(start_index+fit_size+test_size-1)]
+
+
+
+
+
+
+
 
