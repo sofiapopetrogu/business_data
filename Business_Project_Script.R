@@ -782,7 +782,7 @@ mac.ts<-ts(imac, frequency=4)
 # Plotting time series: 
 p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
               geom_line() +
-              labs(x = "Time", y = "MWh", title = "Residential consumption") +
+              labs(x = "Time", y = "MWh", title = "Residential Sales") +
               scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
               scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
               custom_theme()
@@ -878,20 +878,98 @@ dwtest(tslm_ts) # DW = 1.7889, p-value < 0.05
 # DW = 2: no sig autocorrelation - desired
 # DW < 2: pos autocorrelation in residuals, consecutive residuals tend to have similar values
 
+# Forecasting on tslm trend + season model
+
+#take a portion of data and fit a linear model with tslm
+ressales_ts_10 <- window(ressales_ts, start=10, end=22)
+plot(ressales_ts_10)
+m1<- tslm(ressales_ts_10~ trend+ season)
+summary(m1) 
+# R2=0.7637, F-stat=35.55, p<0.0001
+fit<- fitted(m1)
+
+plot(ressales_ts_10)
+lines(fitted(m1), col=2)
+
+# forecasts from regression model for residential sales
+# The dark shaded region shows 80% prediction intervals and 
+# the light shaded 95% prediction intervals (range of values the random variable could take with relatively high probability). 
+fore <- forecast(m1)
+plot(fore)
+
+res<- residuals(m1) 
+plot(res) 
+#the form of residuals seems to indicate the presence of negative autocorrelation
+# white noise residuals indicate good candidate for forecasting
+Acf(res)
+
 ### QUESTION: DOES IT MAKE SENSE TO FIT A BASS MODEL HERE?
 # The assumption of the Bass Model is product growth
+# TODO: Try Bass Models
 
 # ARIMA Models
+
+ggplotly(p_ressales)
+
 # Differencing required before running ARIMA: 
 ressales_ts_df <- diff(ressales_ts)
+tsdisplay(ressales_ts_df)
+# Plot differentiated data to check for stationarity:
 
-# Plot differentiated data to check for stationarity: autoplot(car_ts_df, xlab = "Time", ylab = "CarSales")
-# Residuals of differentiated series: p_acf_df = ggAcf(car_ts_df)
-# Residuals of differentiated series: ggPacf(car_ts_df)
-# Build first ARIMA models, testing diff combos for p, d, q: arima = Arima(car_ts, order = c(0,1,2), seasonal = c(0,1,2))
+p_ts_df <- autoplot(ressales_ts_df, xlab = "Time", ylab = "ResidentialSales")+
+  ggtitle("Residential Sales (MWh) - Differentiated Series")
+
+ggplotly(p_ts_df)
+# Differentiating the series we can see that it seems to be more 
+# stationary (in term of mean)
+
+# Residuals of differentiated series: 
+p_acf_df <- ggAcf(ressales_ts_df) +
+  ggtitle("Acf Function for Diff Residential Sales")
+p_pacf_df <- ggPacf(ressales_ts_df)+
+  ggtitle("Partial Acf Function for Diff Residential Sales")
+
+grid.arrange(p_acf_df, p_pacf_df, nrow = 2)
+# lag 6, 12, 18, 12 significant (mid-year)
+
+# Build first ARIMA models, testing diff combos for p, d, q: 
+# p: autoregresive component (AR): Captures the linear relationship between the current observation and its previous values (lags).
+# d: differencing of the time series to achieve stationarity. degrees of differencing needed
+# q: MA (Moving Average): Models the short-term, unobserved shocks or random fluctuations in the data.
+
+arima0 <- Arima(ressales_ts, order = c(0,1,2), seasonal = c(0,1,0)) # AIC=5918.56
+arima1 <- Arima(ressales_ts, order = c(0,1,2), seasonal = c(0,1,2)) # AIC=5799.4
+arima2 <- Arima(ressales_ts, order = c(0,1,0), seasonal = c(0,0,2)) # AIC=6327.95
+arima3 <- Arima(ressales_ts, order = c(2,1,0), seasonal = c(0,0,2)) # AIC=6304.43
+
+# best ARIMA
+arima1
+
+p_arima <- p_ressales + 
+            geom_line(aes(y = fitted(arima1)), 
+                      color="darkred", linetype="twodash") +
+            ggtitle("Real TimeSeries vs Fitted Values with Arima")+
+            xlab("Time")+
+            ylab("Residential Sales (MWh)")
+
+
+ggplotly(p_arima)
+
+# We now take a look of the residuals obtained by the arima model
+
+p_arima_res <- ggplot(data, aes(x = DATE, y = residuals(arima1))) +
+  geom_point()+
+  labs(x = "Time", y = "Residuals", title = "Residuals of ARIMA with Trend and Season")
+
+ggplotly(p_arima_res)
+# randomly distributed residuals with peak at 2015
+
+# The we look at a more complete information about them:
+checkresiduals(arima1)
+
 # Try auto arima
-# Residuals obtained by the arima model: residuals(arima)
-# More info about residuals: checkresiduals(arima)
+auto.arima <- auto.arima(ressales_ts) # AIC=5879.92
+auto.arima # ARIMA(1,0,0)(1,1,0)[12] with drift 
 
 # Forecast with ARIMA
 # Randomly pick starting index for training set: start_index =  sample(1:500, 1)
