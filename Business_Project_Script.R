@@ -1,4 +1,3 @@
-
 # Energy Data Business Project
 # Project Members: Esteban Ortega Dominguez, Mattia Varagnolo, Sofia Pope Trogu
 # 2023-2024
@@ -8,7 +7,7 @@
 library(ggplot2)
 library(dplyr)
 # model libraries
-library(lmtest) 
+library(lmtest)
 library(forecast)
 library(DIMORA)
 library(fpp2)
@@ -23,7 +22,7 @@ library(gridExtra)
 
 options(scipen = 999)
 # read data
-data <- read.csv("data/energy_data.csv", sep = ';', dec = '.')
+data <- read.csv("data/energy_data.csv", sep = ";", dec = ".")
 
 # Explore data structure and summary
 str(data)
@@ -34,9 +33,46 @@ data$DATE <- as.Date(data$DATE, format = "%d/%m/%Y")
 str(data)
 
 head(data)
+
+####### Description of columns
+# DATE
+# Combined Heat and Power, Commercial Power	MWh
+# Combined Heat and Power, Electric Power	MWh
+# Electric Generators, Electric Utilities	Electricity generation, from utilities
+# Electric Generators, Independent Power Producers	Electricity generation, from independent producers
+# Natural Gas	MWh
+# Other Biomass	MWh
+# Petroleum	MWh
+# Solar Thermal and Photovoltaic	MWh
+# Revenue_residential 	hundreds of USD
+# Sales_residential	MWh
+# Customers_residential	Number of customer residential
+# Price_residential 	USD
+# Revenue_commercial 	hundreds of USD
+# Sales_commercial	MWh
+# Customers_commercial	Number of customers commercial
+# Price_commercial 	USD
+# Revenue_industrial 	hundreds of USD
+# Sales_industrial	MWh
+# Customers_industrial	Number of customers industrial sector
+# Price_industrial 	USD
+# Revenue_transportation 	hundreds of USD
+# Sales_transportation	MWh
+# Customers_transportation	Number of customers transportation
+# Price_transportation 	USD
+# Revenue_total 	hundreds of USD
+# Sales_total	MWh
+# Customers_total	Total number of customers
+# Price_total 	USD
+# tavg	Average temperature
+# tmin	Min temperature
+# tmax	Maximum temperature
+# prcp	Precipitation
+# wspd	Wind speed
+# pres	Pressure
+
+
 # Add total generation columns
-
-
 # negative values in generation found only in independent power producer
 # example: solar power producers relying on sunlight might require independent power sources/producers
 # on non-sunny days
@@ -60,20 +96,26 @@ data <- data[valid_indices, ]
 summary(data)
 
 
-#FIRST, WE PLOT THE OVERALL TOTAL GENERATION BY SOURCE
+# FIRST, WE PLOT THE OVERALL TOTAL GENERATION BY SOURCE
 # Plot time series for total generation columns: source
 ggplot(data, aes(x = DATE, y = total_generation_source)) +
-  geom_line(color = "darkblue", size=0.55,) +
-  labs(x = "Time",
-       y = "Total Energy Generation (MWh)") +
+  geom_line(color = "darkblue", size = 0.55, ) +
+  labs(
+    x = "Time",
+    y = "Total Energy Generation (MWh)"
+  ) +
   theme_minimal() +
-  scale_x_continuous(breaks = seq(min(data$DATE), max(data$DATE), by = "year"),
-                     labels = format(seq(min(data$DATE), max(data$DATE), by = "year"),  "%Y"),
-                     expand = c(0, 0)) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.line = element_line(color = "black"),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+  scale_x_continuous(
+    breaks = seq(min(data$DATE), max(data$DATE), by = "year"),
+    labels = format(seq(min(data$DATE), max(data$DATE), by = "year"), "%Y"),
+    expand = c(0, 0)
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
 # NOW WE PLOT DATA BEFORE 2011 TO SEE PETROLEUM
 # Plot data pre 2011 for Petroleum Dominant Market
@@ -83,18 +125,24 @@ pre2011_subset_data <- data[data$DATE < as.Date("2011-01-01"), ]
 
 # Plot the subset of data before 2011
 ggplot(pre2011_subset_data, aes(x = DATE, y = total_generation_source)) +
-  geom_line(color = "darkblue", size=0.6) +
-  geom_smooth(method = "loess", color = "red", size = 1, span = 0.2) +  # Adjust span
-  labs(x = "Time",
-       y = "Total Energy Generation (MWh)") +
+  geom_line(color = "darkblue", size = 0.6) +
+  geom_smooth(method = "loess", color = "red", size = 1, span = 0.2) + # Adjust span
+  labs(
+    x = "Time",
+    y = "Total Energy Generation (MWh)"
+  ) +
   theme_minimal() +
-  scale_x_continuous(breaks = seq(min(pre2011_subset_data$DATE), max(pre2011_subset_data$DATE), by = "year"),
-                     labels = format(seq(min(pre2011_subset_data$DATE), max(pre2011_subset_data$DATE), by = "year"),  "%Y"),
-                     expand = c(0, 0)) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.line = element_line(color = "black"),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+  scale_x_continuous(
+    breaks = seq(min(pre2011_subset_data$DATE), max(pre2011_subset_data$DATE), by = "year"),
+    labels = format(seq(min(pre2011_subset_data$DATE), max(pre2011_subset_data$DATE), by = "year"), "%Y"),
+    expand = c(0, 0)
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
 # NOW WE PLOT DATA AFTER 2011 TO SEE THE SWITCH TO GAS AND RENEWABLES
 # Petroleum completely stops in mid 2012
@@ -104,29 +152,35 @@ post2011_subset_data <- data[data$DATE >= as.Date("2011-01-01"), ]
 
 # Plot the subset of data
 ggplot(post2011_subset_data, aes(x = DATE, y = total_generation_source)) +
-  geom_line(color = "darkblue")+
-  geom_smooth(method = "loess", color = "red", size = 1, span = 0.25) +  # Adjust span
-  labs(x = "Time",
-       y = "Total Energy Generation (MWh)") +
+  geom_line(color = "darkblue") +
+  geom_smooth(method = "loess", color = "red", size = 1, span = 0.25) + # Adjust span
+  labs(
+    x = "Time",
+    y = "Total Energy Generation (MWh)"
+  ) +
   theme_minimal() +
-  scale_x_continuous(breaks = seq(min(post2011_subset_data$DATE), max(post2011_subset_data$DATE), by = "year"),
-                     labels = format(seq(min(post2011_subset_data$DATE), max(post2011_subset_data$DATE), by = "year"),  "%Y"),
-                     expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0, 90000), breaks = seq(0, 90000, by = 5000))+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.line = element_line(color = "black"),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+  scale_x_continuous(
+    breaks = seq(min(post2011_subset_data$DATE), max(post2011_subset_data$DATE), by = "year"),
+    labels = format(seq(min(post2011_subset_data$DATE), max(post2011_subset_data$DATE), by = "year"), "%Y"),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(limits = c(0, 90000), breaks = seq(0, 90000, by = 5000)) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
 # Since data has a wide range, apply logarithmic scale to total column
-#data$ltotal_generation_source <- log(data$total_generation_source)
+# data$ltotal_generation_source <- log(data$total_generation_source)
 
-#Plot data with log transformation
+# Plot data with log transformation
 # since log 0 is undefined, you have missing values
-#plot(data$DATE, data$ltotal_generation_source, type = "l", col = "black", pch = 16, xlab = "Data", ylab = "Log Generation",
+# plot(data$DATE, data$ltotal_generation_source, type = "l", col = "black", pch = 16, xlab = "Data", ylab = "Log Generation",
 #     main = "Time Series of Log Total Energy Generation from Producers", ylim = c(0, 20))
 
-# We can see switch from petroleum/non-renewable energy production 
+# We can see switch from petroleum/non-renewable energy production
 # to renewable sources starting in 2010
 
 
@@ -136,14 +190,14 @@ ggplot(post2011_subset_data, aes(x = DATE, y = total_generation_source)) +
 #        x = "Month",
 #        y = "Absolute Total Generation Source") +
 #   theme(panel.grid = element_blank())
-# 
+#
 # # pre 2011 subset
 # ggplot(pre2011_subset_data, aes(x = month, y = total_generation_source)) +
 #   geom_line() +
 #   labs(title = "Absolute Total Generation Source by Month",
 #        x = "Month",
 #        y = "Absolute Total Generation Source")
-# 
+#
 # # post 2011 subset
 # ggplot(post2011_subset_data, aes(x = month, y = total_generation_source)) +
 #   geom_line() +
@@ -163,24 +217,26 @@ avg_data <- data %>%
   summarise(avg_generation = mean(total_generation_source, na.rm = TRUE)) %>%
   mutate(highlight_flag = ifelse(avg_generation > 10000, TRUE, FALSE))
 
-avg_data$energysource = 'All'
+avg_data$energysource <- "All"
 
 ggplot(avg_data, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
   geom_bar(stat = "identity", color = "darkblue") +
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Generation") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#3e6fff'), labels = c('Other seasons', 'Summer')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Other seasons", "Summer")) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    text = element_text(hjust = 1, family = 'Helvetica Neue'),
-    title = element_text(face = 'bold')
+    text = element_text(hjust = 1, family = "Helvetica Neue"),
+    title = element_text(face = "bold")
   ) +
-  scale_y_continuous(limits = c(0, 40000), breaks = seq(0, 40000, by = 5000))+
-  geom_text(data = filter(avg_data, month == "lug"),
-            aes(x = month, y = avg_generation, label = round(avg_generation)),
-            vjust = -0.5, color = "black", size = 6)
+  scale_y_continuous(limits = c(0, 40000), breaks = seq(0, 40000, by = 5000)) +
+  geom_text(
+    data = filter(avg_data, month == "lug"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  )
 
 
 
@@ -193,24 +249,26 @@ pre2011_avg_pet_data <- pre2011_subset_data %>%
   summarise(avg_generation = mean(Petroleum, na.rm = TRUE)) %>%
   mutate(highlight_flag = ifelse(avg_generation > 10000, TRUE, FALSE))
 
-pre2011_avg_pet_data$energysource = 'Petroleum'
+pre2011_avg_pet_data$energysource <- "Petroleum"
 
 ggplot(pre2011_avg_pet_data, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
   geom_bar(stat = "identity", color = "darkblue") +
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Petroleum usage") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#3e6fff'), labels = c('Other seasons', 'Summer')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Other seasons", "Summer")) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    text = element_text(hjust = 1, family = 'Helvetica Neue'),
-    title = element_text(face = 'bold')
+    text = element_text(hjust = 1, family = "Helvetica Neue"),
+    title = element_text(face = "bold")
   ) +
-  scale_y_continuous(limits = c(0, 40000), breaks = seq(0, 40000, by = 5000))+
-  geom_text(data = filter(pre2011_avg_pet_data, month == "ago"),
-            aes(x = month, y = avg_generation, label = round(avg_generation)),
-            vjust = -0.5, color = "black", size = 6)
+  scale_y_continuous(limits = c(0, 40000), breaks = seq(0, 40000, by = 5000)) +
+  geom_text(
+    data = filter(pre2011_avg_pet_data, month == "ago"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  )
 
 # Average monthly energy generation from renewables sources post 2011
 post2011_avg_ren_data <- post2011_subset_data %>%
@@ -218,23 +276,25 @@ post2011_avg_ren_data <- post2011_subset_data %>%
   summarise(avg_generation = mean(total_renew_source, na.rm = TRUE)) %>%
   mutate(highlight_flag = ifelse(avg_generation > 3500, TRUE, FALSE))
 
-post2011_avg_ren_data$energysource = 'Renewables'
+post2011_avg_ren_data$energysource <- "Renewables"
 
 
 ggplot(post2011_avg_ren_data, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
   geom_bar(stat = "identity", color = "darkblue") +
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Renewables usage") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#3e6fff'), labels = c('Normal', 'Highest')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
-    text = element_text(hjust = 1, family = 'Helvetica Neue'),
-    title = element_text(face = 'bold')
+    text = element_text(hjust = 1, family = "Helvetica Neue"),
+    title = element_text(face = "bold")
   ) +
-  scale_y_continuous(limits = c(0, 5000), breaks = seq(0, 5000, by = 1000))+
-  geom_text(data = filter(post2011_avg_ren_data, month == "dec"),
-            aes(x = month, y = avg_generation, label = round(avg_generation)),
-            vjust = -0.5, color = "black", size = 6)
+  scale_y_continuous(limits = c(0, 5000), breaks = seq(0, 5000, by = 1000)) +
+  geom_text(
+    data = filter(post2011_avg_ren_data, month == "dec"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  )
 
 # Average monthly energy generation from solar
 # solar data (starting in 2019)
@@ -248,19 +308,21 @@ avg_solar_data <- solar_data %>%
 ggplot(avg_solar_data, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
   geom_bar(stat = "identity", color = "darkblue") +
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Renewables usage") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#3e6fff'), labels = c('Normal', 'Highest')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    text = element_text(hjust = 1, family = 'Helvetica Neue'),
-    title = element_text(face = 'bold')
+    text = element_text(hjust = 1, family = "Helvetica Neue"),
+    title = element_text(face = "bold")
   ) +
-  scale_y_continuous(limits = c(0, 12000), breaks = seq(0, 12000, by = 2000))+
-  geom_text(data = filter(avg_solar_data, month == "mag"),
-            aes(x = month, y = avg_generation, label = round(avg_generation)),
-            vjust = -0.5, color = "black", size = 6)
+  scale_y_continuous(limits = c(0, 12000), breaks = seq(0, 12000, by = 2000)) +
+  geom_text(
+    data = filter(avg_solar_data, month == "mag"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  )
 
 
 
@@ -273,26 +335,27 @@ avg_gas_data <- gas_data %>%
   summarise(avg_generation = mean(Natural.Gas, na.rm = TRUE)) %>%
   mutate(highlight_flag = ifelse(avg_generation > 6500, TRUE, FALSE))
 
-avg_gas_data$energysource = 'Gas'
+avg_gas_data$energysource <- "Gas"
 
 
 ggplot(avg_gas_data, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
-  geom_bar(stat = "identity", color = "darkblue")+
-  
+  geom_bar(stat = "identity", color = "darkblue") +
   labs(x = "Month", y = "Avg. Generation (MWh)", fill = "Natural Gas usage") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = '#3e6fff'), labels = c('Normal', 'Highest')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    text = element_text(hjust = 1, family = 'Helvetica Neue'),
-    title = element_text(face = 'bold')
+    text = element_text(hjust = 1, family = "Helvetica Neue"),
+    title = element_text(face = "bold")
   ) +
-  scale_y_continuous(limits = c(0, 12000), breaks = seq(0, 12000, by = 2000))+
-  geom_text(data = filter(avg_gas_data, month == "lug"),
-            aes(x = month, y = avg_generation, label = round(avg_generation)),
-            vjust = -0.5, color = "black", size = 6)
+  scale_y_continuous(limits = c(0, 12000), breaks = seq(0, 12000, by = 2000)) +
+  geom_text(
+    data = filter(avg_gas_data, month == "lug"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  )
 
 
 
@@ -300,33 +363,35 @@ ggplot(avg_gas_data, aes(x = factor(month), y = avg_generation, fill = as.charac
 ######################## COMBINED DATA PLOT
 
 
-combined_data = rbind(avg_data, pre2011_avg_pet_data)
-combined_data = rbind(combined_data, post2011_avg_ren_data)
-combined_data = rbind(combined_data, avg_gas_data)
-print(n=30, combined_data)
+combined_data <- rbind(avg_data, pre2011_avg_pet_data)
+combined_data <- rbind(combined_data, post2011_avg_ren_data)
+combined_data <- rbind(combined_data, avg_gas_data)
+print(n = 30, combined_data)
 
-ggplot(combined_data, 
-       aes(fill = energysource, y = avg_generation, x = month)) +
-  geom_bar(position = 'dodge', stat = 'identity') +
-  scale_fill_manual(values = c("All" = "white", "Petroleum" = "#6d93d1", "Renewables" = "#32558c", 'Gas'="#b1c3e0")) +
+ggplot(
+  combined_data,
+  aes(fill = energysource, y = avg_generation, x = month)
+) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = c("All" = "white", "Petroleum" = "#6d93d1", "Renewables" = "#32558c", "Gas" = "#b1c3e0")) +
   labs(
     title = "Average Generation by Source",
     x = "Month",
     y = "Average Generation (MWh)",
     fill = "Energy Source"
-    ) +
+  ) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, family = 'Helvetica Neue'),
+    axis.text.x = element_text(angle = 45, hjust = 1, family = "Helvetica Neue"),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    plot.title = element_text(face = "bold", family = 'Helvetica Neue'),
-    axis.text.y = element_text(hjust = 1, family = 'Helvetica Neue')
+    plot.title = element_text(face = "bold", family = "Helvetica Neue"),
+    axis.text.y = element_text(hjust = 1, family = "Helvetica Neue")
   ) +
   scale_y_continuous(limits = c(0, 40000), breaks = seq(0, 40000, by = 5000))
 
-------------------------------------------------------------------------------
-------------------------------------------------------------------------------
-------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Filter the dataset for rows where Petroleum is greater than 0
 petroleum_data <- subset(data, Petroleum > 0)
 
@@ -335,46 +400,52 @@ max_point <- petroleum_data[which.max(petroleum_data$Petroleum), ]
 
 # Set the x-axis limits to go up to the year 2015
 ggplot(petroleum_data, aes(x = DATE, y = Petroleum, color = "Petroleum")) +
-  geom_line(size = 1, color = 'darkblue') +  # Adjust line width and color here
-  geom_point(data = max_point, aes(x = DATE, y = Petroleum), color = 'red', size = 3) +  
-  geom_text(data = max_point, aes(x = DATE, y = Petroleum, label = paste("max: ", round(Petroleum, 2))),
-            vjust = 0.2, hjust = -0.3, color = 'black', size = 5, family='serif') +  # Display the value of the max point
-  labs(title = "Petroleum Energy Generation",
-       x = "Time",
-       y = "MWh") +
+  geom_line(size = 1, color = "darkblue") + # Adjust line width and color here
+  geom_point(data = max_point, aes(x = DATE, y = Petroleum), color = "red", size = 3) +
+  geom_text(
+    data = max_point, aes(x = DATE, y = Petroleum, label = paste("max: ", round(Petroleum, 2))),
+    vjust = 0.2, hjust = -0.3, color = "black", size = 5, family = "serif"
+  ) + # Display the value of the max point
+  labs(
+    title = "Petroleum Energy Generation",
+    x = "Time",
+    y = "MWh"
+  ) +
   theme_minimal() +
-  scale_x_date(limits = c(as.Date('2001-01-01'), as.Date("2015-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") +  # Adjust x-axis limits and labels
+  scale_x_date(limits = c(as.Date("2001-01-01"), as.Date("2015-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") + # Adjust x-axis limits and labels
   theme(
-    panel.grid.major = element_line(color = "white", size = 0.5),  # Adjust major grid lines
-    panel.grid.minor = element_blank(),  # Remove minor grid lines
-    plot.title = element_text(face = "bold", hjust = 0.5, size = 16),  # Adjust title font size
-    axis.text = element_text(size = 12, family = "serif"),  # Adjust axis text font size and family
-    axis.title = element_text(size = 14, family = "serif", angle = 0),  # Adjust axis title font size and set angle to 0 for horizontal
-    axis.line = element_line(color = "black", size = 0.8),  # Adjust axis line color and size
-    axis.ticks = element_line(color = "black"),  # Adjust tick marks color
-    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels at a 45-degree angle
+    panel.grid.major = element_line(color = "white", size = 0.5), # Adjust major grid lines
+    panel.grid.minor = element_blank(), # Remove minor grid lines
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 16), # Adjust title font size
+    axis.text = element_text(size = 12, family = "serif"), # Adjust axis text font size and family
+    axis.title = element_text(size = 14, family = "serif", angle = 0), # Adjust axis title font size and set angle to 0 for horizontal
+    axis.line = element_line(color = "black", size = 0.8), # Adjust axis line color and size
+    axis.ticks = element_line(color = "black"), # Adjust tick marks color
+    axis.text.x = element_text(angle = 45, hjust = 1) # Rotate x-axis labels at a 45-degree angle
   ) +
   scale_color_manual(name = "Energy Source", values = c("Petroleum" = "blue"))
 
 # do the same for renewables
-renewable = data$total_renew_source
+renewable <- data$total_renew_source
 
 ggplot(data, aes(x = DATE, y = total_renew_source, color = "Renewable")) +
-  geom_line(size = 1, color = 'darkblue') +  # Adjust line width and color here
-   labs(title = "Renewable Energy Generation",
-       x = "Time",
-       y = "MWh") +
+  geom_line(size = 1, color = "darkblue") + # Adjust line width and color here
+  labs(
+    title = "Renewable Energy Generation",
+    x = "Time",
+    y = "MWh"
+  ) +
   theme_minimal() +
-  scale_x_date(limits = c(as.Date('2011-01-01'), as.Date("2022-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") +  # Adjust x-axis limits and labels
+  scale_x_date(limits = c(as.Date("2011-01-01"), as.Date("2022-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") + # Adjust x-axis limits and labels
   theme(
-    panel.grid.major = element_line(color = "white", size = 0.5),  # Adjust major grid lines
-    panel.grid.minor = element_blank(),  # Remove minor grid lines
-    plot.title = element_text(face = "bold", hjust = 0.5, size = 16),  # Adjust title font size
-    axis.text = element_text(size = 12, family = "serif"),  # Adjust axis text font size and family
-    axis.title = element_text(size = 14, family = "serif", angle = 0),  # Adjust axis title font size and set angle to 0 for horizontal
-    axis.line = element_line(color = "black", size = 0.8),  # Adjust axis line color and size
-    axis.ticks = element_line(color = "black"),  # Adjust tick marks color
-    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels at a 45-degree angle
+    panel.grid.major = element_line(color = "white", size = 0.5), # Adjust major grid lines
+    panel.grid.minor = element_blank(), # Remove minor grid lines
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 16), # Adjust title font size
+    axis.text = element_text(size = 12, family = "serif"), # Adjust axis text font size and family
+    axis.title = element_text(size = 14, family = "serif", angle = 0), # Adjust axis title font size and set angle to 0 for horizontal
+    axis.line = element_line(color = "black", size = 0.8), # Adjust axis line color and size
+    axis.ticks = element_line(color = "black"), # Adjust tick marks color
+    axis.text.x = element_text(angle = 45, hjust = 1) # Rotate x-axis labels at a 45-degree angle
   ) +
   scale_color_manual(name = "Energy Source", values = c("Renewable" = "blue"))
 
@@ -405,13 +476,15 @@ ggplot(renewable, aes(x = DATE, fill = "Energy Source")) +
   geom_point(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, color = "Natural Gas"), size = 5) +
   geom_point(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, color = "Other Biomass"), size = 5) +
   geom_point(data = max_point_solar, aes(x = DATE, y = max_value_solar, color = "Solar"), size = 5) +
-  geom_text(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, label = round(max_value_natural_gas, 2)), vjust = -1, hjust = -0.5, size = 5, family='serif', color = "red") +
-  geom_text(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, label = round(max_value_other_biomass, 2)), vjust = -1, hjust = -0.5, size = 5, family='serif', color = "blue") +
-  geom_text(data = max_point_solar, aes(x = DATE, y = max_value_solar, label = round(max_value_solar, 2)), vjust = -1, hjust = -0.5, size = 5, family='serif', color = "orange") +
-  labs(title = "Current  Energy Generation",
-       x = "Time",
-       y = "MWh") +
-  scale_x_date(limits = c(as.Date('2011-01-01'), as.Date("2022-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") +
+  geom_text(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, label = round(max_value_natural_gas, 2)), vjust = -1, hjust = -0.5, size = 5, family = "serif", color = "red") +
+  geom_text(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, label = round(max_value_other_biomass, 2)), vjust = -1, hjust = -0.5, size = 5, family = "serif", color = "blue") +
+  geom_text(data = max_point_solar, aes(x = DATE, y = max_value_solar, label = round(max_value_solar, 2)), vjust = -1, hjust = -0.5, size = 5, family = "serif", color = "orange") +
+  labs(
+    title = "Current  Energy Generation",
+    x = "Time",
+    y = "MWh"
+  ) +
+  scale_x_date(limits = c(as.Date("2011-01-01"), as.Date("2022-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") +
   theme_minimal() +
   theme(
     panel.grid.major = element_line(color = "white", size = 0.5),
@@ -442,13 +515,15 @@ ggplot(renewable, aes(x = DATE, color = "Energy Source")) +
   geom_point(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, color = "Natural Gas"), size = 5) +
   geom_point(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, color = "Biomass"), size = 5) +
   geom_point(data = max_point_solar, aes(x = DATE, y = max_value_solar, color = "Solar"), size = 5) +
-  geom_text(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, label = paste("gas max: ", round(max_value_natural_gas, 2))), vjust = 0, hjust = 1.2, size = 4, family='serif', color = "red") +
-  geom_text(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, label = paste("biomass max: ", round(max_value_other_biomass, 2))), vjust = -0.9, hjust = 1.2, size = 4, family='serif', color = "blue") +
-  geom_text(data = max_point_solar, aes(x = DATE, y = max_value_solar, label = paste("solar max: ", round(max_value_solar, 2))), vjust = 0, hjust = 1.1, size = 4, family='serif', color = "orange") +
-  labs(title = "Current  Energy Generation",
-       x = "Time",
-       y = "MWh") +
-  scale_x_date(limits = c(as.Date('2011-01-01'), as.Date("2022-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") +
+  geom_text(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, label = paste("gas max: ", round(max_value_natural_gas, 2))), vjust = 0, hjust = 1.2, size = 4, family = "serif", color = "red") +
+  geom_text(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, label = paste("biomass max: ", round(max_value_other_biomass, 2))), vjust = -0.9, hjust = 1.2, size = 4, family = "serif", color = "blue") +
+  geom_text(data = max_point_solar, aes(x = DATE, y = max_value_solar, label = paste("solar max: ", round(max_value_solar, 2))), vjust = 0, hjust = 1.1, size = 4, family = "serif", color = "orange") +
+  labs(
+    title = "Current  Energy Generation",
+    x = "Time",
+    y = "MWh"
+  ) +
+  scale_x_date(limits = c(as.Date("2011-01-01"), as.Date("2022-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") +
   theme_minimal() +
   theme(
     panel.grid.major = element_line(color = "white", size = 0.5),
@@ -461,7 +536,7 @@ ggplot(renewable, aes(x = DATE, color = "Energy Source")) +
     legend.position = "top",
     legend.title = element_blank(),
     legend.text = element_text(size = 10),
-    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels at a 45-degree angle
+    axis.text.x = element_text(angle = 45, hjust = 1) # Rotate x-axis labels at a 45-degree angle
   ) +
   scale_color_manual(
     name = "Energy Source",
@@ -479,36 +554,42 @@ ggplot(renewable, aes(x = DATE, color = "Energy Source")) +
   ) +
   scale_y_continuous(limits = c(0, 20000), breaks = seq(0, 20000, by = 2500))
 
-############################################################################################# OVERALL PLOT
+############################################################## OVERALL PLOT
 
 # Melt the data for ggplot
 library(reshape2)
-energy_data_melted <- melt(data, id.vars = "DATE", measure.vars = c('Natural.Gas','Other.Biomass','Petroleum','Solar.Thermal.and.Photovoltaic'))
+energy_data_melted <- melt(data, id.vars = "DATE", measure.vars = c("Natural.Gas", "Other.Biomass", "Petroleum", "Solar.Thermal.and.Photovoltaic"))
 
 # Create a bar plot
 ggplot(energy_data_melted, aes(x = DATE, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "stack", color = "black") +
-  labs(title = "Energy Generation Over Time",
-       x = "Time",
-       y = "Energy Generated (MWh)",
-       fill = "Energy Source") +
+  labs(
+    title = "Energy Generation Over Time",
+    x = "Time",
+    y = "Energy Generated (MWh)",
+    fill = "Energy Source"
+  ) +
   theme_minimal()
 
 
 
-############################################################################################# PLOT BY ENERGY PRODUCERS
+################################################### PLOT BY ENERGY PRODUCERS
 
 # Plot time series Combined Heat and Power. Commercial Power
-plot(data$DATE, data$Combined.Heat.and.Power..Commercial.Power, type = "l", col= 'orange', pch=16 ,xlab = "Date", ylab = "Generation",
-     main = "Time Series Combined Heat and Power. Commercial Power", ylim = c(0, 20000))+
-legend('topright', legend = 'Solar | Theremal | Photovoltaic', col = 'orange', lty=1)
+plot(data$DATE, data$Combined.Heat.and.Power..Commercial.Power,
+  type = "l", col = "orange", pch = 16, xlab = "Date", ylab = "Generation",
+  main = "Time Series Combined Heat and Power. Commercial Power", ylim = c(0, 20000)
+)
+legend("topright", legend = "Solar | Thermal | Photovoltaic", col = "orange", lty = 1)
 
-#TODO: check the correlation with commercial customers
+# TODO: check the correlation with commercial customers
 
 # Plot time series Combined Heat and Power. Commercial Power
-plot(data$DATE, data$Combined.Heat.and.Power..Electric.Power, type = "l", col= 'orange', pch=16 ,xlab = "Date", ylab = "Generation",
-     main = "Time Series Combined Heat and Power. Commercial Power", ylim = c(0, 20000))
-legend('topright', legend = 'Generation of electric power', col = 'orange', lty=1)
+plot(data$DATE, data$Combined.Heat.and.Power..Electric.Power,
+  type = "l", col = "orange", pch = 16, xlab = "Date", ylab = "Generation",
+  main = "Time Series Combined Heat and Power. Commercial Power", ylim = c(0, 20000)
+)
+legend("topright", legend = "Generation of electric power", col = "orange", lty = 1)
 
 
 
@@ -530,18 +611,20 @@ filtered_total <- data[data$Customers_total > 0, ]
 # Function to create a common theme
 custom_theme <- function() {
   theme_minimal() +
-    theme(legend.position = 'bottom',
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.border = element_blank(),
-          axis.line = element_line(color = 'black'))
+    theme(
+      legend.position = "bottom",
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.line = element_line(color = "black")
+    )
 }
 
 # option to remove scientific notation
 options(scipen = 999)
 # Plot for Customers_residential (houses)
 ggplot(filtered_residential, aes(x = DATE, y = Customers_residential)) +
-  geom_line(colour = 'orange') +
+  geom_line(colour = "orange") +
   labs(x = "Time", y = "Number of customers", title = "Residential's customers") +
   scale_y_continuous(limits = c(0, max(filtered_residential$Customers_residential))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -549,7 +632,7 @@ ggplot(filtered_residential, aes(x = DATE, y = Customers_residential)) +
 
 # Plot for Customers_commercial (malls, businesses)
 ggplot(filtered_commercial, aes(x = DATE, y = Customers_commercial)) +
-  geom_line(colour = 'blue') +
+  geom_line(colour = "blue") +
   labs(x = "Time", y = "Number of customers", title = "Commercial's customers") +
   scale_y_continuous(limits = c(0, max(filtered_commercial$Customers_commercial))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -557,7 +640,7 @@ ggplot(filtered_commercial, aes(x = DATE, y = Customers_commercial)) +
 
 # Plot for Customers_industrial (factory)
 ggplot(filtered_industrial, aes(x = DATE, y = Customers_industrial)) +
-  geom_line(colour = 'green') +
+  geom_line(colour = "green") +
   labs(x = "Time", y = "Number of customers", title = "Industrial's customers") +
   scale_y_continuous(limits = c(0, max(filtered_industrial$Customers_industrial))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -565,15 +648,15 @@ ggplot(filtered_industrial, aes(x = DATE, y = Customers_industrial)) +
 
 # Plot for Customers_transportation (cars, trucks, trains, planes, and boats)
 ggplot(filtered_transportation, aes(x = DATE, y = Customers_transportation)) +
-  geom_line(colour = 'red') +
+  geom_line(colour = "red") +
   labs(x = "Time", y = "Number of customers", title = "Transportation's customers") +
   scale_y_continuous(limits = c(0, max(filtered_transportation$Customers_transportation))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
-# Plot for Total 
+# Plot for Total
 ggplot(filtered_total, aes(x = DATE, y = Customers_total)) +
-  geom_line(colour = 'red') +
+  geom_line(colour = "red") +
   labs(x = "Time", y = "Number of customers", title = "Transportation's customers") +
   scale_y_continuous(limits = c(0, max(filtered_total$Customers_total))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -581,14 +664,12 @@ ggplot(filtered_total, aes(x = DATE, y = Customers_total)) +
 
 
 
-
-
-#######################################################à SALES AND MONEYYY
+####################################################### SALES AND MONEYYY
 
 # Plot for Residential
 # seasonality and residential consumption has upward trend with variability
 ggplot(data, aes(x = DATE, y = Sales_residential)) +
-  geom_line(colour = 'red') +
+  geom_line(colour = "red") +
   labs(x = "Time", y = "MWh", title = "Residential consumption") +
   scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -598,7 +679,7 @@ ggplot(data, aes(x = DATE, y = Sales_residential)) +
 
 # Plot for Commercial Sales
 ggplot(data, aes(x = DATE, y = Sales_commercial)) +
-  geom_line(colour = 'blue') +
+  geom_line(colour = "blue") +
   labs(x = "Time", y = "MWh", title = "Commercial Sales") +
   scale_y_continuous(limits = c(0, max(data$Sales_commercial))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -606,7 +687,7 @@ ggplot(data, aes(x = DATE, y = Sales_commercial)) +
 
 # Plot for Industrial Sales
 ggplot(data, aes(x = DATE, y = Sales_industrial)) +
-  geom_line(colour = 'green') +
+  geom_line(colour = "green") +
   labs(x = "Time", y = "MWh", title = "Industrial Sales") +
   scale_y_continuous(limits = c(0, max(data$Sales_industrial))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -614,7 +695,7 @@ ggplot(data, aes(x = DATE, y = Sales_industrial)) +
 
 # Plot for Transportation Sales
 ggplot(data, aes(x = DATE, y = Sales_transportation)) +
-  geom_line(colour = 'red') +
+  geom_line(colour = "red") +
   labs(x = "Time", y = "MWh", title = "Transportation Sales") +
   scale_y_continuous(limits = c(0, max(data$Sales_transportation))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -623,7 +704,7 @@ ggplot(data, aes(x = DATE, y = Sales_transportation)) +
 
 # Plot for Total Sales
 ggplot(data, aes(x = DATE, y = Sales_total)) +
-  geom_line(colour = 'red') +
+  geom_line(colour = "red") +
   labs(x = "Time", y = "MWh", title = "Total Sales") +
   scale_y_continuous(limits = c(0, max(data$Sales_total))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -641,31 +722,33 @@ avg_sales_month <- sales_data %>%
 ggplot(avg_sales_month, aes(x = factor(month), y = avg_sales, fill = as.character(highlight_flag))) +
   geom_bar(stat = "identity", color = "darkblue") +
   labs(x = "Month", y = "Avg. Sales", fill = "Sales") +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c('Normal', 'Highest')) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.line = element_line(color = "black"),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    text = element_text(hjust = 1, family = 'Helvetica Neue'),
-    title = element_text(face = 'bold')
+    text = element_text(hjust = 1, family = "Helvetica Neue"),
+    title = element_text(face = "bold")
   ) +
   scale_y_continuous(limits = c(0, 1500000), breaks = seq(0, max(avg_sales_month$avg_sales) + 10000, by = 100000)) +
-  geom_text(data = filter(avg_sales_month, month == "lug"),
-            aes(x = month, y = avg_sales, label = round(avg_sales)),
-            vjust = -0.5, color = "black", size = 6)
+  geom_text(
+    data = filter(avg_sales_month, month == "lug"),
+    aes(x = month, y = avg_sales, label = round(avg_sales)),
+    vjust = -0.5, color = "black", size = 6
+  )
 
 
-#TODO Avg Sales for residential and commercial sales after 2012 (customers column filled)
+# TODO Avg Sales for residential and commercial sales after 2012 (customers column filled)
 
 
 ########################### PRICE plotting
 
 ggplot(data, aes(x = DATE, y = Price_total)) +
-  geom_line(colour = 'darkgreen') +
-  geom_vline(xintercept = as.numeric(as.Date("2005-01-01")), linetype='dashed',color='blue')+
-  geom_vline(xintercept = as.numeric(as.Date("2013-01-01")), linetype='dashed',color='blue')+
-  geom_vline(xintercept = as.numeric(as.Date("2021-01-01")), linetype='dashed',color='blue')+
+  geom_line(colour = "darkgreen") +
+  geom_vline(xintercept = as.numeric(as.Date("2005-01-01")), linetype = "dashed", color = "blue") +
+  geom_vline(xintercept = as.numeric(as.Date("2013-01-01")), linetype = "dashed", color = "blue") +
+  geom_vline(xintercept = as.numeric(as.Date("2021-01-01")), linetype = "dashed", color = "blue") +
   labs(x = "Time", y = "Average Price (cents/kWh)", title = "Price over time") +
   scale_y_continuous(limits = c(0, max(data$Price_total)), breaks = seq(0, max(data$Price_total), by = 2)) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -674,10 +757,10 @@ ggplot(data, aes(x = DATE, y = Price_total)) +
 
 
 ggplot(data, aes(x = DATE, y = Price_residential)) +
-  geom_line(colour = 'darkgreen') +
-  geom_vline(xintercept = as.numeric(as.Date("2005-01-01")), linetype='dashed',color='blue')+
-  geom_vline(xintercept = as.numeric(as.Date("2013-01-01")), linetype='dashed',color='blue')+
-  geom_vline(xintercept = as.numeric(as.Date("2021-01-01")), linetype='dashed',color='blue')+
+  geom_line(colour = "darkgreen") +
+  geom_vline(xintercept = as.numeric(as.Date("2005-01-01")), linetype = "dashed", color = "blue") +
+  geom_vline(xintercept = as.numeric(as.Date("2013-01-01")), linetype = "dashed", color = "blue") +
+  geom_vline(xintercept = as.numeric(as.Date("2021-01-01")), linetype = "dashed", color = "blue") +
   labs(x = "Time", y = "Average Price (cents/kWh)", title = "Price over time") +
   scale_y_continuous(limits = c(0, max(data$Price_total)), breaks = seq(0, max(data$Price_total), by = 2)) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
@@ -685,13 +768,13 @@ ggplot(data, aes(x = DATE, y = Price_residential)) +
   custom_theme()
 
 
-############################ Assess Autocorrelations 
+############################ Assess Autocorrelations
 
 
 
-acf(data$Sales_total, main='Autocorrelation for sales')
-acf(data$total_generation_source, main='Autocorrelation for energy generation')
-acf(data[data$Solar.Thermal.and.Photovoltaic > 0,]$Solar.Thermal.and.Photovoltaic)  #WEIRD#
+acf(data$Sales_total, main = "Autocorrelation for sales")
+acf(data$total_generation_source, main = "Autocorrelation for energy generation")
+acf(data[data$Solar.Thermal.and.Photovoltaic > 0, ]$Solar.Thermal.and.Photovoltaic) # WEIRD#
 acf(data$Sales_transportation) # trend
 acf(data$Sales_residential) # Seasonal
 acf(data$Price_total)
@@ -699,7 +782,7 @@ acf(data$Price_total)
 
 ########################### Correlation matrices
 # Initialize an empty data frame for numerical columns
-numerical_data <- data[data$DATE >= as.Date('2012-01-01'),]
+numerical_data <- data[data$DATE >= as.Date("2012-01-01"), ]
 
 str(numerical_data)
 
@@ -710,104 +793,106 @@ numerical_data <- data %>%
 # Print the new data frame with numerical columns
 print(numerical_data)
 
-cor_matrix = cor(numerical_data)
+cor_matrix <- cor(numerical_data)
 
 library(corrplot)
-
-color_palette = colorRampPalette(c("#BB4444","#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
-
+color_palette <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
 corrplot(cor_matrix, method = "number", tl.cex = 0.7, cl.cex = 0.8, number.cex = 0.3)
 
+# Do the correlation plot without full titles to see better (optional)
+numerical_data_i <- numerical_data
+colnames(numerical_data_i) <- seq_along(colnames(numerical_data_i))
+cor_matrix_i <- cor(numerical_data_i)
+corrplot(cor_matrix_i, method = "color", tl.cex = 0.7, cl.cex = 0.8, number.cex = 0.3)
 
 
-# Function to filter correlated values and create a list of tuples
-filter_correlation <- function(cor_matrix, threshold = 0.5) {
-  correlated_list <- list()
-  
-  for (col in colnames(cor_matrix)) {
-    correlated_cols <- colnames(cor_matrix)[cor_matrix[, col] > threshold | cor_matrix[, col] < -threshold]
-    correlated_tuples <- data.frame(label = character(0), correlation = numeric(0), stringsAsFactors = FALSE)
-    
-    for (cor_col in correlated_cols) {
-      correlation_value <- cor_matrix[cor_col, col]
-      correlated_tuples <- rbind(correlated_tuples, list(label = cor_col, correlation = correlation_value))
+######## df with relevant correlations
+# Set your correlation threshold (also valid for negative because of abs)
+threshold <- 0.55
+# Initialize df
+high_corr_df <- data.frame(Column1 = character(), Column2 = character(), Correlation = numeric(), stringsAsFactors = FALSE)
+
+# Iterate over the correlation matrix
+for (i in 1:ncol(cor_matrix)) {
+  for (j in 1:ncol(cor_matrix)) {
+    if (i != j && abs(cor_matrix[i, j]) > threshold) {
+      high_corr_df <- rbind(high_corr_df, data.frame(
+        Column1 = colnames(cor_matrix)[i],
+        Column2 = colnames(cor_matrix)[j],
+        Correlation = cor_matrix[i, j],
+        stringsAsFactors = FALSE
+      ))
     }
-    
-    correlated_list[[col]] <- as.list(correlated_tuples)
   }
-  
-  return(correlated_list)
 }
 
-# Filter correlation matrix for values > 0.5 or < -0.5
-filtered_cor_matrix <- cor_matrix * (abs(cor_matrix) > 0.5)
+# Print relevant correlations df
+high_corr_df
+# Print only correlation for price_residential
+high_corr_df[high_corr_df$Column1 == "Sales_residential", ]
 
-# Create a list of correlated tuples for each variable
-correlated_tuples <- filter_correlation(filtered_cor_matrix)
 
-# Print the list of correlated tuples
-print(correlated_tuples)
-
+###############################################################
 # Models
 
 ## Linear Regression
-##fit a linear regression model 
-fit1 <- fitts<- tslm(gmwh~year_month)
+## fit a linear regression model
+fit1 <- fitts <- tslm(gmwh ~ year_month)
 summary(fit1)
 
-##plot of the linear model
-plot(year_month, gmwh, xlab="Year-Month", ylab="Energy Generation")
-abline(fit1, col=3)
+## plot of the linear model
+plot(year_month, gmwh, xlab = "Year-Month", ylab = "Energy Generation")
+abline(fit1, col = 3)
 
-##Check residuals of model and see if there are autocorrelated
+## Check residuals of model and see if there are autocorrelated
 dwtest(fit1)
-##check the residuals
-resfit1<- residuals(fit1)
-plot(resfit1,xlab="Time", ylab="residuals" )
+## check the residuals
+resfit1 <- residuals(fit1)
+plot(resfit1, xlab = "Time", ylab = "residuals")
 
-mac.ts<-ts(imac, frequency=4)
+mac.ts <- ts(imac, frequency = 4)
 
 ---------------------------------------------------------------------------------
----------------------------------------------------------------------------------  
----------------------------------------------------------------------------------
-  
-# 2. ANALYZE SERIES OF RESIDENTIAL (MWh) SALES IN DC 
+  ---------------------------------------------------------------------------------
+    ---------------------------------------------------------------------------------
 
-# Plotting time series: 
-p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
-              geom_line() +
-              labs(x = "Time", y = "MWh", title = "Residential Sales") +
-              scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
-              scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
-              custom_theme()
+      # 2. ANALYZE SERIES OF RESIDENTIAL (MWh) SALES IN DC
+
+      # Plotting time series:
+      p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
+  geom_line() +
+  labs(x = "Time", y = "MWh", title = "Residential Sales") +
+  scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme()
 
 ggplotly(p_ressales)
 
 # Observations:
-# appears to be prominent seasonality 
-# slightly increasing trend with a spike in Jan 2015 
+# appears to be prominent seasonality
+# slightly increasing trend with a spike in Jan 2015
 
-# Run Acf: 
-Acf(data$Sales_residential, main='Autocorrelation for Residential Sales')
-# The lack of decay in the autocorrelation at the seasonal lags 
+# Run Acf:
+Acf(data$Sales_residential, main = "Autocorrelation for Residential Sales")
+# The lack of decay in the autocorrelation at the seasonal lags
 # may suggest a strong and persistent seasonality in the data
 
 # Run pAcf:
-Pacf(data$Sales_residential, main='Partial autocorrelation for Residential Sales')
-# more gradual decay in the partial autocorrelation indicates that 
-# some of the observed correlation at shorter lags can be explained 
-# by the correlations at longer lags. 
+Pacf(data$Sales_residential, main = "Partial autocorrelation for Residential Sales")
+# more gradual decay in the partial autocorrelation indicates that
+# some of the observed correlation at shorter lags can be explained
+# by the correlations at longer lags.
 # This is typical in the presence of a combination of trend and seasonality
 
-# MODELS 
+# MODELS
 
 # Linear Regression
 
-# represent our data as a time series: 
-ressales_ts = ts(data$Sales_residential, frequency = 12)
+# represent our data as a time series:
+ressales_ts <- ts(data$Sales_residential, frequency = 12)
 
-# First model with only the trend: 
-tslm_t = tslm(ressales_ts ~ trend)
+# First model with only the trend:
+tslm_t <- tslm(ressales_ts ~ trend)
 summary(tslm_t)
 
 # Trend is significant but R2 is bad
@@ -815,29 +900,30 @@ summary(tslm_t)
 
 # plot real values against fitted values and plot residuals as well
 p_tslm_t <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
-            geom_line() +
-            labs(x = "Time", y = "Residential Sales (MWh)", title = "Real TimeSeries vs Fitted Values TSLM") +
-            scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
-            scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
-            custom_theme() +
-            geom_line(aes(y = fitted(tslm_t)), 
-                      color="darkred", linetype="twodash") 
+  geom_line() +
+  labs(x = "Time", y = "Residential Sales (MWh)", title = "Real TimeSeries vs Fitted Values TSLM") +
+  scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
+  custom_theme() +
+  geom_line(aes(y = fitted(tslm_t)),
+    color = "darkred", linetype = "twodash"
+  )
 
 ggplotly(p_tslm_t)
 
 p_tslm_res <- ggplot(data, aes(x = DATE, y = residuals(tslm_t))) +
-              geom_point()+
-              labs(x = "Time", y = "Residuals", title = "Residuals of TSLM with Trend")
+  geom_point() +
+  labs(x = "Time", y = "Residuals", title = "Residuals of TSLM with Trend")
 
 ggplotly(p_tslm_res)
 
-# As we can see, importance of seasonality and that outlier spike in 2015 emerges 
+# As we can see, importance of seasonality and that outlier spike in 2015 emerges
 
-# Second model with the trend and the seasonality: 
+# Second model with the trend and the seasonality:
 
-tslm_ts <- tslm(ressales_ts ~ trend+season) 
+tslm_ts <- tslm(ressales_ts ~ trend + season)
 summary(tslm_ts)
-# Trend is significant and R2 has drastically improved 
+# Trend is significant and R2 has drastically improved
 # R-squared = 0.7941; F = 80.65 with 251 df; p < 0.0001
 
 # plot real values against fitted values and also residuals
@@ -847,13 +933,14 @@ p_tslm_ts <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
   scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme() +
-  geom_line(aes(y = fitted(tslm_ts)), 
-            color="darkred", linetype="twodash") 
+  geom_line(aes(y = fitted(tslm_ts)),
+    color = "darkred", linetype = "twodash"
+  )
 
 ggplotly(p_tslm_ts)
 
 p_tslm_ts_res <- ggplot(data, aes(x = DATE, y = residuals(tslm_ts))) +
-  geom_point()+
+  geom_point() +
   labs(x = "Time", y = "Residuals", title = "Residuals of TSLM with Trend and Season")
 
 ggplotly(p_tslm_ts_res)
@@ -866,7 +953,7 @@ dwtest(tslm_t) # DW = 1.199, p<0.0001
 dwtest(tslm_ts) # DW = 1.7889, p-value < 0.05
 
 # DW statistic ranges from 0 to 4. Test detects presences of autocorrelation
-# in residuals (errors) of a model. Autocorrelation in residuals indicates 
+# in residuals (errors) of a model. Autocorrelation in residuals indicates
 # systematic pattern in unexplained variation in data points, which violates
 # assumptions of independence
 # DW = 2: no sig autocorrelation - desired
@@ -874,26 +961,26 @@ dwtest(tslm_ts) # DW = 1.7889, p-value < 0.05
 
 # Forecasting on tslm trend + season model
 
-#take a portion of data and fit a linear model with tslm
-ressales_ts_10 <- window(ressales_ts, start=10, end=22)
+# take a portion of data and fit a linear model with tslm
+ressales_ts_10 <- window(ressales_ts, start = 10, end = 22)
 plot(ressales_ts_10)
-m1<- tslm(ressales_ts_10~ trend+ season)
-summary(m1) 
+m1 <- tslm(ressales_ts_10 ~ trend + season)
+summary(m1)
 # R2=0.7637, F-stat=35.55, p<0.0001
-fit<- fitted(m1)
+fit <- fitted(m1)
 
 plot(ressales_ts_10)
-lines(fitted(m1), col=2)
+lines(fitted(m1), col = 2)
 
 # forecasts from regression model for residential sales
-# The dark shaded region shows 80% prediction intervals and 
-# the light shaded 95% prediction intervals (range of values the random variable could take with relatively high probability). 
+# The dark shaded region shows 80% prediction intervals and
+# the light shaded 95% prediction intervals (range of values the random variable could take with relatively high probability).
 fore <- forecast(m1)
 plot(fore)
 
-res<- residuals(m1) 
-plot(res) 
-#the form of residuals seems to indicate the presence of negative autocorrelation
+res <- residuals(m1)
+plot(res)
+# the form of residuals seems to indicate the presence of negative autocorrelation
 # white noise residuals indicate good candidate for forecasting
 Acf(res)
 
@@ -905,46 +992,47 @@ Acf(res)
 
 ggplotly(p_ressales)
 
-# Differencing required before running ARIMA: 
+# Differencing required before running ARIMA:
 ressales_ts_df <- diff(ressales_ts)
 tsdisplay(ressales_ts_df)
 # Plot differentiated data to check for stationarity:
 
-p_ts_df <- autoplot(ressales_ts_df, xlab = "Time", ylab = "ResidentialSales")+
+p_ts_df <- autoplot(ressales_ts_df, xlab = "Time", ylab = "ResidentialSales") +
   ggtitle("Residential Sales (MWh) - Differentiated Series")
 
 ggplotly(p_ts_df)
-# Differentiating the series we can see that it seems to be more 
+# Differentiating the series we can see that it seems to be more
 # stationary (in term of mean)
 
-# Residuals of differentiated series: 
+# Residuals of differentiated series:
 p_acf_df <- ggAcf(ressales_ts_df) +
   ggtitle("Acf Function for Diff Residential Sales")
-p_pacf_df <- ggPacf(ressales_ts_df)+
+p_pacf_df <- ggPacf(ressales_ts_df) +
   ggtitle("Partial Acf Function for Diff Residential Sales")
 
 grid.arrange(p_acf_df, p_pacf_df, nrow = 2)
 # lag 6, 12, 18, 12 significant (mid-year)
 
-# Build first ARIMA models, testing diff combos for p, d, q: 
+# Build first ARIMA models, testing diff combos for p, d, q:
 # p: autoregresive component (AR): Captures the linear relationship between the current observation and its previous values (lags).
 # d: differencing of the time series to achieve stationarity. degrees of differencing needed
 # q: MA (Moving Average): Models the short-term, unobserved shocks or random fluctuations in the data.
 
-arima0 <- Arima(ressales_ts, order = c(0,1,2), seasonal = c(0,1,0)) # AIC=5918.56
-arima1 <- Arima(ressales_ts, order = c(0,1,2), seasonal = c(0,1,2)) # AIC=5799.4
-arima2 <- Arima(ressales_ts, order = c(0,1,0), seasonal = c(0,0,2)) # AIC=6327.95
-arima3 <- Arima(ressales_ts, order = c(2,1,0), seasonal = c(0,0,2)) # AIC=6304.43
+arima0 <- Arima(ressales_ts, order = c(0, 1, 2), seasonal = c(0, 1, 0)) # AIC=5918.56
+arima1 <- Arima(ressales_ts, order = c(0, 1, 2), seasonal = c(0, 1, 2)) # AIC=5799.4
+arima2 <- Arima(ressales_ts, order = c(0, 1, 0), seasonal = c(0, 0, 2)) # AIC=6327.95
+arima3 <- Arima(ressales_ts, order = c(2, 1, 0), seasonal = c(0, 0, 2)) # AIC=6304.43
 
 # best ARIMA
 arima1
 
-p_arima <- p_ressales + 
-            geom_line(aes(y = fitted(arima1)), 
-                      color="darkred", linetype="twodash") +
-            ggtitle("Real TimeSeries vs Fitted Values with Arima")+
-            xlab("Time")+
-            ylab("Residential Sales (MWh)")
+p_arima <- p_ressales +
+  geom_line(aes(y = fitted(arima1)),
+    color = "darkred", linetype = "twodash"
+  ) +
+  ggtitle("Real TimeSeries vs Fitted Values with Arima") +
+  xlab("Time") +
+  ylab("Residential Sales (MWh)")
 
 
 ggplotly(p_arima)
@@ -952,7 +1040,7 @@ ggplotly(p_arima)
 # We now take a look of the residuals obtained by the arima model
 
 p_arima_res <- ggplot(data, aes(x = DATE, y = residuals(arima1))) +
-  geom_point()+
+  geom_point() +
   labs(x = "Time", y = "Residuals", title = "Residuals of ARIMA with Trend and Season")
 
 ggplotly(p_arima_res)
@@ -963,7 +1051,7 @@ checkresiduals(arima1)
 
 # Try auto arima
 auto.arima <- auto.arima(ressales_ts) # AIC=5879.92
-auto.arima # ARIMA(1,0,0)(1,1,0)[12] with drift 
+auto.arima # ARIMA(1,0,0)(1,1,0)[12] with drift
 
 # Forecast with ARIMA
 # Randomly pick starting index for training set: start_index =  sample(1:500, 1)
@@ -976,7 +1064,7 @@ auto.arima # ARIMA(1,0,0)(1,1,0)[12] with drift
 # Lagged Regressors
 
 # Overall Schematic of Project
-# 1. Describe story of energy generation and consumption for electricity in DC 
+# 1. Describe story of energy generation and consumption for electricity in DC
 # 2. Analyze series of residential consumption (sales) in DC
 # 3. Add other explanatory variables: residential customers, avg price, generation and modify time series with sales
 # 4. Focus on timeframe from 2012-2022 since data is more reliable then and there is the transition from Petroleum to alternatives and renewables
@@ -994,11 +1082,3 @@ auto.arima # ARIMA(1,0,0)(1,1,0)[12] with drift
 # Seasonal Autoregressive Integrated Moving Average (SARIMA)
 # Seasonal Exponential Smoothing (ETS)
 # XGBoost and LightGBM Boosting Algorithms
-
-
-
-
-
-
-
-
