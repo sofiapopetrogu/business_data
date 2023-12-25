@@ -6,6 +6,7 @@
 
 library(ggplot2)
 library(dplyr)
+
 # model libraries
 library(lmtest)
 library(forecast)
@@ -13,12 +14,17 @@ library(DIMORA)
 library(fpp2)
 library(graphics)
 library(prophet)
-library(lubridate)
 
 library(qtl2)
 library(readxl)
 library(plotly)
 library(gridExtra)
+
+# TS analysis specific libraries
+# tsibble for time series objects
+library(tsibble)
+library(feasts)
+library(lubridate)
 
 options(scipen = 999)
 # read data
@@ -34,43 +40,7 @@ str(data)
 
 head(data)
 
-####### Description of columns
-# DATE
-# Combined Heat and Power, Commercial Power	MWh
-# Combined Heat and Power, Electric Power	MWh
-# Electric Generators, Electric Utilities	Electricity generation, from utilities
-# Electric Generators, Independent Power Producers	Electricity generation, from independent producers
-# Natural Gas	MWh
-# Other Biomass	MWh
-# Petroleum	MWh
-# Solar Thermal and Photovoltaic	MWh
-# Revenue_residential 	hundreds of USD
-# Sales_residential	MWh
-# Customers_residential	Number of customer residential
-# Price_residential 	USD
-# Revenue_commercial 	hundreds of USD
-# Sales_commercial	MWh
-# Customers_commercial	Number of customers commercial
-# Price_commercial 	USD
-# Revenue_industrial 	hundreds of USD
-# Sales_industrial	MWh
-# Customers_industrial	Number of customers industrial sector
-# Price_industrial 	USD
-# Revenue_transportation 	hundreds of USD
-# Sales_transportation	MWh
-# Customers_transportation	Number of customers transportation
-# Price_transportation 	USD
-# Revenue_total 	hundreds of USD
-# Sales_total	MWh
-# Customers_total	Total number of customers
-# Price_total 	USD
-# tavg	Average temperature
-# tmin	Min temperature
-# tmax	Maximum temperature
-# prcp	Precipitation
-# wspd	Wind speed
-# pres	Pressure
-
+####### Descriptions of columns found in the data dictionary
 
 # Add total generation columns
 # negative values in generation found only in independent power producer
@@ -426,7 +396,7 @@ ggplot(petroleum_data, aes(x = DATE, y = Petroleum, color = "Petroleum")) +
   scale_color_manual(name = "Energy Source", values = c("Petroleum" = "blue"))
 
 # do the same for renewables
-renewable <- data$total_renew_source
+renewable <- data$total_renew_source # total_renew_source combines solar and biomass
 
 ggplot(data, aes(x = DATE, y = total_renew_source, color = "Renewable")) +
   geom_line(size = 1, color = "darkblue") + # Adjust line width and color here
@@ -832,34 +802,14 @@ high_corr_df
 high_corr_df[high_corr_df$Column1 == "Sales_residential", ]
 
 
-###############################################################
-# Models
 
-## Linear Regression
-## fit a linear regression model
-fit1 <- fitts <- tslm(gmwh ~ year_month)
-summary(fit1)
+#---------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------
+# 2. ANALYZE SERIES OF RESIDENTIAL (MWh) SALES IN DC
 
-## plot of the linear model
-plot(year_month, gmwh, xlab = "Year-Month", ylab = "Energy Generation")
-abline(fit1, col = 3)
-
-## Check residuals of model and see if there are autocorrelated
-dwtest(fit1)
-## check the residuals
-resfit1 <- residuals(fit1)
-plot(resfit1, xlab = "Time", ylab = "residuals")
-
-mac.ts <- ts(imac, frequency = 4)
-
----------------------------------------------------------------------------------
-  ---------------------------------------------------------------------------------
-    ---------------------------------------------------------------------------------
-
-      # 2. ANALYZE SERIES OF RESIDENTIAL (MWh) SALES IN DC
-
-      # Plotting time series:
-      p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
+# Plotting time series:
+p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
   geom_line() +
   labs(x = "Time", y = "MWh", title = "Residential Sales") +
   scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
@@ -867,6 +817,7 @@ mac.ts <- ts(imac, frequency = 4)
   custom_theme()
 
 ggplotly(p_ressales)
+
 
 # Observations:
 # appears to be prominent seasonality
@@ -876,6 +827,8 @@ ggplotly(p_ressales)
 Acf(data$Sales_residential, main = "Autocorrelation for Residential Sales")
 # The lack of decay in the autocorrelation at the seasonal lags
 # may suggest a strong and persistent seasonality in the data
+# We can see a very strong autocorrelation at months 5,6,7 which reflects the
+# changes between winter - summer
 
 # Run pAcf:
 Pacf(data$Sales_residential, main = "Partial autocorrelation for Residential Sales")
@@ -884,6 +837,70 @@ Pacf(data$Sales_residential, main = "Partial autocorrelation for Residential Sal
 # by the correlations at longer lags.
 # This is typical in the presence of a combination of trend and seasonality
 
+
+####################################
+# Create tsible object (specialized object for time series analysis)
+# copy data
+data_tsbl <- data
+# change date format
+data_tsbl$DATE <- yearmonth(data_tsbl$DATE)
+# do we want to filter for data only  post 2012?
+data_tsbl <- as_tsibble(data_tsbl, index = DATE)
+
+#####################################
+# (more) EDA plots: Residential sales
+
+# Yearly seasonal plots
+gg_season(data_tsbl, y = Sales_residential)
+# Different view: years grouped by month
+gg_subseries(data_tsbl,  y = Sales_residential)
+  # Clear seasonality for summer peaks and winter
+
+# From the columns that we have which are our potential regressors for residential sales?
+colnames(data)
+# [1] "DATE"                                            
+# [2] "Combined.Heat.and.Power..Commercial.Power"  yes     
+# [3] "Combined.Heat.and.Power..Electric.Power"   yes      
+# [4] "Electric.Generators..Electric.Utilities"   yes      
+# [5] "Electric.Generators..Independent.Power.Producers" yes
+# [6] "Natural.Gas"    yes                                 
+# [7] "Other.Biomass"   yes                                
+# [8] "Petroleum"       yes                                
+# [9] "Solar.Thermal.and.Photovoltaic" yes                  
+# [10] "total_renew_source"             yes                 
+# [11] "Revenue_residential"                             
+# [12] "Sales_residential"                               
+# [13] "Customers_residential"                           
+# [14] "Price_residential"        yes                       
+# [15] "Revenue_commercial"                              
+# [16] "Sales_commercial"                                
+# [17] "Customers_commercial"                            
+# [18] "Price_commercial"                                
+# [19] "Revenue_industrial"                              
+# [20] "Sales_industrial"                                
+# [21] "Customers_industrial"                            
+# [22] "Price_industrial"                                
+# [23] "Revenue_transportation"                          
+# [24] "Sales_transportation"                            
+# [25] "Customers_transportation"                        
+# [26] "Price_transportation"                            
+# [27] "Revenue_total"                                   
+# [28] "Sales_total"                                     
+# [29] "Customers_total"                                 
+# [30] "Price_total"                                     
+# [31] "tavg" yes                                           
+# [32] "tmin" yes                                           
+# [33] "tmax" yes                                          
+# [34] "prcp" yes                                          
+# [35] "wspd" yes                                           
+# [36] "pres"                                            
+# [37] "total_generation_producer"                       
+# [38] "total_generation_source"                         
+# [39] "month"
+colnames(data)[c(2, 3, 4, 5, 6, 7, 8,  9, 10, 14, 31, 32, 34, 35)]
+
+
+###########################################################3
 # MODELS
 
 # Linear Regression
