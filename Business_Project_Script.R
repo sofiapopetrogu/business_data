@@ -25,6 +25,14 @@ library(gridExtra)
 library(tsibble)
 library(feasts)
 library(lubridate)
+library(GGally)
+
+# From the Hyndman time series book
+library(fpp3)
+
+# for VIF
+library(car)
+
 
 options(scipen = 999)
 # read data
@@ -752,6 +760,7 @@ acf(data$Price_total)
 
 ########################### Correlation matrices
 # Initialize an empty data frame for numerical columns
+# numerical data is already a split after 2012
 numerical_data <- data[data$DATE >= as.Date("2012-01-01"), ]
 
 str(numerical_data)
@@ -776,37 +785,56 @@ cor_matrix_i <- cor(numerical_data_i)
 corrplot(cor_matrix_i, method = "color", tl.cex = 0.7, cl.cex = 0.8, number.cex = 0.3)
 
 
-######## df with relevant correlations
-# Set your correlation threshold (also valid for negative because of abs)
-threshold <- 0.55
-# Initialize df
-high_corr_df <- data.frame(Column1 = character(), Column2 = character(), Correlation = numeric(), stringsAsFactors = FALSE)
+### Correlations df
+# Lets make a correlations function that inputs data frame and outputs correlations df
+find_correlations <- function(data, threshold = 0.1) {
+  # Data subset should be previously given
+  # Check if data is a data frame
+  if (!is.data.frame(data)) {
+    stop("Input must be a dataframe.")
+  }
 
-# Iterate over the correlation matrix
-for (i in 1:ncol(cor_matrix)) {
-  for (j in 1:ncol(cor_matrix)) {
-    if (i != j && abs(cor_matrix[i, j]) > threshold) {
-      high_corr_df <- rbind(high_corr_df, data.frame(
-        Column1 = colnames(cor_matrix)[i],
-        Column2 = colnames(cor_matrix)[j],
-        Correlation = cor_matrix[i, j],
-        stringsAsFactors = FALSE
-      ))
+  # Select only numeric columns
+  numeric_data <- data[sapply(data, is.numeric)]
+
+  # Calculate the correlation matrix
+  cor_matrix <- cor(numeric_data, use = "complete.obs") # Handling missing values
+
+  # Initialize an empty dataframe to store high correlations
+  high_corr_df <- data.frame(
+    Column1 = character(),
+    Column2 = character(),
+    Correlation = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+  # Iterate over the correlation matrix
+  for (i in 1:ncol(cor_matrix)) {
+    for (j in 1:ncol(cor_matrix)) {
+      # Check for high correlation and avoid duplicates and self-correlation
+      if (i != j && abs(cor_matrix[i, j]) > threshold) {
+        high_corr_df <- rbind(high_corr_df, data.frame(
+          Column1 = colnames(cor_matrix)[i],
+          Column2 = colnames(cor_matrix)[j],
+          Correlation = cor_matrix[i, j],
+          stringsAsFactors = FALSE
+        ))
+      }
     }
   }
+
+  return(high_corr_df)
 }
 
 # Print relevant correlations df
-high_corr_df
-# Print only correlation for price_residential
-high_corr_df[high_corr_df$Column1 == "Sales_residential", ]
-
+correlations_df <- find_correlations(data, threshold = 0.1)
 
 
 #---------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------
-# 2. ANALYZE SERIES OF RESIDENTIAL (MWh) SALES IN DC
+# ANALYZE SERIES OF RESIDENTIAL (MWh) SALES IN DC
+# 1. EDA plots: Residential sales
 
 # Plotting time series:
 p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
@@ -818,11 +846,90 @@ p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
 
 ggplotly(p_ressales)
 
-
 # Observations:
 # appears to be prominent seasonality
 # slightly increasing trend with a spike in Jan 2015
 
+### Create tsible object (specialized object for time series analysis)
+# Copy data
+data_tsbl <- data
+# change date format
+data_tsbl$DATE <- yearmonth(data_tsbl$DATE)
+# do we want to filter for data only  post 2012?
+data_tsbl <- as_tsibble(data_tsbl, index = DATE)
+
+# Yearly seasonal plots
+gg_season(data_tsbl, y = Sales_residential)
+# Different view: years grouped by month
+gg_subseries(data_tsbl, y = Sales_residential)
+# Clear seasonality for summer peaks and winter
+
+
+#### CORRELATIONS
+# Columns to include in the correlations graph:
+# colnames(data_tsbl)
+# [1] "DATE"
+# [2] "Combined.Heat.and.Power..Commercial.Power"  yes
+# [3] "Combined.Heat.and.Power..Electric.Power"   yes
+# [4] "Electric.Generators..Electric.Utilities"   yes
+# [5] "Electric.Generators..Independent.Power.Producers" yes
+# [6] "Natural.Gas"    yes
+# [7] "Other.Biomass"   yes
+# [8] "Petroleum"       yes
+# [9] "Solar.Thermal.and.Photovoltaic" yes
+# [10] "total_renew_source"             yes
+# [11] "Revenue_residential"
+# [12] "Sales_residential"            yes
+# [13] "Customers_residential" yes
+# [14] "Price_residential" yes
+# [15] "Revenue_commercial"
+# [16] "Sales_commercial"
+# [17] "Customers_commercial" yes
+# [18] "Price_commercial"
+# [19] "Revenue_industrial"
+# [20] "Sales_industrial"
+# [21] "Customers_industrial" yes
+# [22] "Price_industrial"
+# [23] "Revenue_transportation"
+# [24] "Sales_transportation"
+# [25] "Customers_transportation" yes
+# [26] "Price_transportation"
+# [27] "Revenue_total"
+# [28] "Sales_total"
+# [29] "Customers_total"
+# [30] "Price_total"
+# [31] "tavg" yes
+# [32] "tmin" yes
+# [33] "tmax" yes
+# [34] "prcp" yes
+# [35] "wspd" yes
+# [36] "pres" yes
+# [37] "total_generation_producer"
+# [38] "total_generation_source"
+# [39] "month"
+# data_tsbl[colnames(data_tsbl)[c(12, 2, 3, 4, 5, 6, 7, 8,  9, 10, 31, 32, 34, 35)]]
+# Plot correlations with graphs
+data_tsbl[colnames(data_tsbl)[c(12, 2, 3, 4, 5, 6, 7, 8 ,9, 10, 13, 14, 17, 21, 25, 31, 32, 33, 34, 35, 36)]] |>
+  GGally::ggpairs()
+
+# Get correlations from previously defined correlations function
+corr_df <- find_correlations(data, threshold = 0.01)
+# Print relevant correlations
+corr_sales <- corr_df[corr_df$Column1 == "Sales_residential", ]
+sorted_corr <- corr_sales[order(abs(corr_sales$Correlation), decreasing = TRUE), ]
+sorted_corr
+# Strongest correlations is with variables related to sales, revenue, number of customer,
+# price, which all makes sense since our variable is residential sales of electricty MWh
+
+
+### LAG PLOTS
+data_tsbl |>
+  gg_lag(Sales_residential, geom = "point", lags = 1:12) +
+  labs(x = "lag(Sales_residential, k)")
+# we see a strongly positive relationship at lags 1, 6, 12 and a somewhat
+# negative one at lags 3, 9
+
+### AUTO CORRELATIONS
 # Run Acf:
 Acf(data$Sales_residential, main = "Autocorrelation for Residential Sales")
 # The lack of decay in the autocorrelation at the seasonal lags
@@ -838,76 +945,193 @@ Pacf(data$Sales_residential, main = "Partial autocorrelation for Residential Sal
 # This is typical in the presence of a combination of trend and seasonality
 
 
-####################################
-# Create tsible object (specialized object for time series analysis)
-# copy data
-data_tsbl <- data
-# change date format
-data_tsbl$DATE <- yearmonth(data_tsbl$DATE)
-# do we want to filter for data only  post 2012?
-data_tsbl <- as_tsibble(data_tsbl, index = DATE)
+### Seasonal and Trend decomposition using Loess (STL)
+# Get components
+dcmp <- data_tsbl |>
+  model(
+    STL(
+      Sales_residential ~ trend(window = 12) +
+        season(window = "periodic"),
+      robust = TRUE
+    )
+  ) |>
+  components()
+# Syntax equivalent to: components(model(data_tsbl, STL(Sales_residential ~ trend(window = 12) + season(window = "periodic"), robust = TRUE)))
+## |> operator pipes the argument into the first function and
+# then from innermost to outermost function in sequential order
 
-#####################################
-# (more) EDA plots: Residential sales
+autoplot(dcmp) # The season_adjust values are the seasonally adjusted values
+# i.e. trend value + remainder (true - trend - seasonal)
+# dcmp has the trend component, the season, the remainder and the seasonally adjusted values
 
-# Yearly seasonal plots
-gg_season(data_tsbl, y = Sales_residential)
-# Different view: years grouped by month
-gg_subseries(data_tsbl,  y = Sales_residential)
-  # Clear seasonality for summer peaks and winter
+# Plot raw and seasonally adjusted values
+# Pivot dable into long format for one graph
+dcmp_long <- pivot_longer(dcmp, cols = -c(DATE, .model), names_to = "series", values_to = "value")
 
-# From the columns that we have which are our potential regressors for residential sales?
-colnames(data)
-# [1] "DATE"                                            
-# [2] "Combined.Heat.and.Power..Commercial.Power"  yes     
-# [3] "Combined.Heat.and.Power..Electric.Power"   yes      
-# [4] "Electric.Generators..Electric.Utilities"   yes      
-# [5] "Electric.Generators..Independent.Power.Producers" yes
-# [6] "Natural.Gas"    yes                                 
-# [7] "Other.Biomass"   yes                                
-# [8] "Petroleum"       yes                                
-# [9] "Solar.Thermal.and.Photovoltaic" yes                  
-# [10] "total_renew_source"             yes                 
-# [11] "Revenue_residential"                             
-# [12] "Sales_residential"                               
-# [13] "Customers_residential"                           
-# [14] "Price_residential"        yes                       
-# [15] "Revenue_commercial"                              
-# [16] "Sales_commercial"                                
-# [17] "Customers_commercial"                            
-# [18] "Price_commercial"                                
-# [19] "Revenue_industrial"                              
-# [20] "Sales_industrial"                                
-# [21] "Customers_industrial"                            
-# [22] "Price_industrial"                                
-# [23] "Revenue_transportation"                          
-# [24] "Sales_transportation"                            
-# [25] "Customers_transportation"                        
-# [26] "Price_transportation"                            
-# [27] "Revenue_total"                                   
-# [28] "Sales_total"                                     
-# [29] "Customers_total"                                 
-# [30] "Price_total"                                     
-# [31] "tavg" yes                                           
-# [32] "tmin" yes                                           
-# [33] "tmax" yes                                          
-# [34] "prcp" yes                                          
-# [35] "wspd" yes                                           
-# [36] "pres"                                            
-# [37] "total_generation_producer"                       
-# [38] "total_generation_source"                         
-# [39] "month"
-colnames(data)[c(2, 3, 4, 5, 6, 7, 8,  9, 10, 14, 31, 32, 34, 35)]
+ggplot(dcmp_long[dcmp_long$series %in% c("Sales_residential", "season_adjust"), ], aes(x = DATE, y = value, color = series)) +
+  geom_line() +
+  ggtitle("Comparison with seasonally adjusted values") +
+  xlab("Time") +
+  ylab("Value")
 
-
-###########################################################3
+###########################################################
 # MODELS
 
-# Linear Regression
+#########
+# Simple forecasting methods (used for benchmarking)
+# 1. MEAN forecasting
+# forecast is the mean of observations
+fit_mean <- data_tsbl |> model(MEAN(Sales_residential))
+# Plot
+fit_mean |>
+  forecast(h = "2 years") |>
+  autoplot(data_tsbl)
+
+# 2. Naive method
+# we set all forecasts to be the value fo the last observation
+fit_naive <- data_tsbl |> model(NAIVE(Sales_residential))
+# Plot
+fit_naive |>
+  forecast(h = "2 years") |>
+  autoplot(data_tsbl)
+
+# 3. Seasonal naive method
+# we set the forecast values to be the same of the last season i.e. month
+fit_snaive <- data_tsbl |> model(SNAIVE(Sales_residential ~ lag("year")))
+# Plot
+fit_snaive |>
+  forecast(h = "2 years") |>
+  autoplot(data_tsbl)
+
+# Store residuals
+aug <- augment(fit_snaive)
+
+# Residuals plotting
+autoplot(aug, .innov)
+
+# We can also do a simple scatter plot
+plot(aug$.innov, main = "Scatter Plot")
+
+# Plot histogram of residuals: normal distribution of residuals
+aug |>
+  ggplot(aes(x = .innov)) +
+  geom_histogram() +
+  labs(title = "Histogram of residuals")
+# Residuals appear to be somewhat normally distributed
+
+# Plot autocorrelation of residuals: correlation of residuals
+aug |>
+  ACF(.innov) |>
+  autoplot() +
+  labs(title = "Residuals from drift method")
+# Autocorrelation at lag 12
+
+# 4. Drift method
+# variation of naive method that allows increase or decrease over time
+fit_rw <- data_tsbl |> model(RW(Sales_residential ~ drift()))
+# Plot
+fit_rw |>
+  forecast(h = "2 years") |>
+  autoplot(data_tsbl)
+
+# Store residuals
+aug <- augment(fit_rw)
+
+# Residuals plotting
+autoplot(aug, .innov)
+
+# We can also do a simple scatter plot
+plot(aug$.innov, main = "Scatter Plot")
+
+# Plot histogram of residuals: normal distribution of residuals
+aug |>
+  ggplot(aes(x = .innov)) +
+  geom_histogram() +
+  labs(title = "Histogram of residuals")
+# Residuals appear to be somewhat normally distributed
+
+# Plot ACF of residuals: correlation of residuals
+aug |>
+  ACF(.innov) |>
+  autoplot() +
+  labs(title = "Residuals from drift method")
+# There still is autocorrelation on residuals after applying the model
+
+# Residual diagnostics: a good forecasting model will have:
+# 1. Uncorrelated innovation residuals (innovation residuals are residuals on the transformed data)
+# 2. Innovation residuals have zero mean if not forecast is biased
+# 3. The innovation residuals have constant variance. This is known as “homoscedasticity”.
+# 4. The innovation residuals are normally distributed.
+
+# Forecasting with seasonally adjusted values
+# Fit model with seasonaly adjusted values except last year which takes seasonality
+fit_dcmp <- data_tsbl |>
+  model(stlf = decomposition_model(
+    STL(Sales_residential ~ trend(window = 12), robust = TRUE),
+    NAIVE(season_adjust)
+  ))
+# Plot model with forecast
+fit_dcmp |>
+  forecast() |>
+  autoplot(data_tsbl)
+
+### Evaluating our simple methods
+# Evaluation of a forecasting method should be done on a test set, separate from training
+# Dataset splitting
+recent_data <- data_tsbl |>
+  filter(DATE >= yearmonth("2022-01"))
+
+older_data <- data_tsbl |>
+  filter(DATE < yearmonth("2022-01")) 
+
+# Fit data to older data with our 4 simple models
+sales_fit <- older_data |>
+  model(
+    Mean = MEAN(Sales_residential),
+    `Naive` = NAIVE(Sales_residential),
+    `Seasonal naive` = SNAIVE(Sales_residential),
+    Drift = RW(Sales_residential ~ drift())
+  )
+
+# Generate the forecast
+sales_fc <- sales_fit |>
+  forecast(h = "1 years")
+
+#Plot
+sales_fc |>
+  autoplot(
+    data_tsbl,
+    level = NULL
+  ) +
+  labs(
+    y = "Sales MWh",
+    title = "Forecasts for quarterly beer production"
+  ) +
+  guides(colour = guide_legend(title = "Forecast"))
+
+# Graphically we see that the best simple model is the Seasonal naive
+# Lets compute our metrics
+  # The accuracy() function will automatically extract the relevant periods from 
+  # the data (recent_production in this example) to match the forecasts when 
+  # computing the various accuracy measures.
+accuracy(sales_fc, recent_data)
+  # The measures calculated are:
+  # ME: Mean Error
+  # RMSE: Root Mean Squared Error
+  # MAE: Mean Absolute Error
+  # MPE: Mean Percentage Error
+  # MAPE: Mean Absolute Percentage Error
+  # MASE: Mean Absolute Scaled Error
+  # ACF1: Autocorrelation of errors at lag 1.
+
+
+############
+# 1. Linear Regression
 
 # represent our data as a time series:
 ressales_ts <- ts(data$Sales_residential, frequency = 12)
 
+# TREND ONLY
 # First model with only the trend:
 tslm_t <- tslm(ressales_ts ~ trend)
 summary(tslm_t)
@@ -915,7 +1139,7 @@ summary(tslm_t)
 # Trend is significant but R2 is bad
 # R-squared = 0.2221; F = 74.79 with 262 df; p < 0.0001
 
-# plot real values against fitted values and plot residuals as well
+# plot real values against fitted values
 p_tslm_t <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
   geom_line() +
   labs(x = "Time", y = "Residential Sales (MWh)", title = "Real TimeSeries vs Fitted Values TSLM") +
@@ -928,6 +1152,7 @@ p_tslm_t <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
 
 ggplotly(p_tslm_t)
 
+# Plot residuals
 p_tslm_res <- ggplot(data, aes(x = DATE, y = residuals(tslm_t))) +
   geom_point() +
   labs(x = "Time", y = "Residuals", title = "Residuals of TSLM with Trend")
@@ -936,8 +1161,8 @@ ggplotly(p_tslm_res)
 
 # As we can see, importance of seasonality and that outlier spike in 2015 emerges
 
+# TREND + SEASON
 # Second model with the trend and the seasonality:
-
 tslm_ts <- tslm(ressales_ts ~ trend + season)
 summary(tslm_ts)
 # Trend is significant and R2 has drastically improved
@@ -976,8 +1201,9 @@ dwtest(tslm_ts) # DW = 1.7889, p-value < 0.05
 # DW = 2: no sig autocorrelation - desired
 # DW < 2: pos autocorrelation in residuals, consecutive residuals tend to have similar values
 
-# Forecasting on tslm trend + season model
 
+# TREND + SEASON on subset
+# Forecasting on tslm trend + season model
 # take a portion of data and fit a linear model with tslm
 ressales_ts_10 <- window(ressales_ts, start = 10, end = 22)
 plot(ressales_ts_10)
@@ -1002,9 +1228,126 @@ plot(res)
 Acf(res)
 
 ### QUESTION: DOES IT MAKE SENSE TO FIT A BASS MODEL HERE?
+# R: does not make sense sinse bass models decribes the process of how  new
+# products get adopted in a population
 # The assumption of the Bass Model is product growth
 # TODO: Try Bass Models
 
+################
+# 2. Multiple linear regression model
+# Key we have to select which predictors we will use
+# We can do this via stepwise selection
+
+# We make the following assumptions regarding error terms
+# ("1, ..., "N)
+# 1. errors have mean zero
+# 2. errors are uncorrelated
+# 3. errors are uncorrelated with Xj,i
+
+# We will start with the full model that takes all variables into account
+# lets take only data after 2012 for the multiple linear regression
+# as petroleum has some spikes earlier
+# numerical_data is already only post 2012
+
+
+##########
+# OPTION 1: STEPWISE REDUCTION WITH ALL VARIABLES (NO SUBJECTIVE SELECTION)
+lr_fullModel = lm(Sales_residential ~ ., data=numerical_data, family = gaussian)
+summary(lr_fullModel)
+lr_step_aic = step(lr_fullModel, direction="both", trace=0, steps=1000)
+summary(lr_step_aic)
+# Compute Variance Inflation factor to assess multicollinearity
+vif(lr_step_aic)
+# We see that many predictors have very high VIFs
+
+# Multicolinearity reduction function
+reduce_multicollinearity <- function(model) {
+  while(TRUE) {
+    # Get the predictors that are part of the model
+    predictors <- names(coef(model))[-1]
+    
+    # Calculate VIF for each variable in the model
+    vif_values <- vif(model)
+    # Check if the maximum VIF is greater than the threshold (20)
+    if(max(vif_values) < 10) {
+      break
+    }
+    
+    # Identify the variable with the highest VIF
+    max_vif_var <- names(which.max(vif_values))
+    # Get rid of that variable
+    predictors <- predictors[predictors != max_vif_var]
+    # Update our model getting rid of that predictor
+    formula_string <- paste("Sales_residential ~", paste(predictors, collapse = " + "))
+    # Convert the string to a formula
+    formula_object <- as.formula(formula_string)
+    # Fit the model using the formula
+    model <- lm(formula_object, data=numerical_data, family = gaussian)
+  }
+  
+  return(model)
+}
+# Reduce colinearity
+new_model_1 <- reduce_multicollinearity(lr_step_aic)
+# Summary
+vif(new_model_1)
+summary(new_model_1)
+extractAIC(new_model_1)
+# Very high fit but also has Revenue_residential and Sales_total which
+# has a correlation value of 0.89 as its a function of sales, we should remove
+# it
+acf(residuals(new_model_1))
+
+# We should not use option 1
+
+####
+# OPTION 2: SUBJECTIVE FEATURE SELECTION as first step (using logic)
+#Lets remove those predictors that are a function of others, example revenue
+# [1] "Combined.Heat.and.Power..Electric.Power" Y        
+# [2] "Electric.Generators..Independent.Power.Producers" Y
+# [3] "Natural.Gas" Y                                     
+# [4] "Other.Biomass" Y                                  
+# [5] "Petroleum"   Y                                    
+# [6] "Solar.Thermal.and.Photovoltaic" Y                 
+# [7] "Revenue_residential"   N                          
+# [8] "Customers_residential"   Y                        
+# [9] "Price_residential"    Y                           
+# [10] "Revenue_commercial"    N                          
+# [11] "Sales_commercial"     N                           
+# [12] "Customers_commercial"  N because is colinear with customers resdential                          
+# [13] "Price_commercial"     Y                           
+# [14] "Revenue_industrial"   N                           
+# [15] "Revenue_transportation"  N                        
+# [16] "Customers_transportation"  N                      
+# [17] "Revenue_total"   N                                
+# [18] "Sales_total"     N                                
+# [19] "Price_total"     N                                
+# [20] "tmax" Y
+# These are our regressors:
+predictors <- names(coef(lr_step_aic))[-1]
+predictors
+# Variable selection:
+new_predictors <- predictors[c(1,2,3,4,5,6,8,9,13,20)]
+new_predictors
+# Fit model
+formula_string <- paste("Sales_residential ~", paste(new_predictors, collapse = " + "))
+# Convert the string to a formula
+formula_object <- as.formula(formula_string)
+# Fit the model using the formula
+new_model_2 <- lm(formula_object, data=numerical_data)
+# Stepwise selection of variables
+new_model_2_step = step(new_model_2, direction="both", trace=0, steps=1000)
+# Reduce colinearity
+new_model_2_step <- reduce_multicollinearity(new_model_2)
+vif(new_model_2_step)
+summary(new_model_2_step)
+extractAIC(new_model_2_step)
+acf(residuals(new_model_2_step))
+
+# In summary: Multiple linear regression  not a good option!!
+
+
+############
 # ARIMA Models
 
 ggplotly(p_ressales)
