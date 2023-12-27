@@ -1365,7 +1365,7 @@ hw_fit <- train_data |>
                      season("A")),
     # b) Multiplicative is preferred when the seasonal variations are changing
     # proportional to the level of the series
-    'hw_multiplicative' = ETS(Sales_residential ~ error("A") + trend("M") +
+    'hw_multiplicative' = ETS(Sales_residential ~ error("M") + trend("A") +
                            season("M"))
   )
 
