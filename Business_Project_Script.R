@@ -826,7 +826,7 @@ find_correlations <- function(data, threshold = 0.1) {
   return(high_corr_df)
 }
 
-# Print relevant correlations df
+# relevant correlations df
 correlations_df <- find_correlations(data, threshold = 0.1)
 
 
@@ -1078,18 +1078,20 @@ fit_dcmp |>
 ### Evaluating our simple methods
 # Evaluation of a forecasting method should be done on a test set, separate from training
 # Dataset splitting
-recent_data <- data_tsbl |>
-  filter(DATE >= yearmonth("2022-01"))
-
-older_data <- data_tsbl |>
+train_data <- data_tsbl |>
   filter(DATE < yearmonth("2022-01")) 
 
+test_data <- data_tsbl |>
+  filter(DATE >= yearmonth("2022-01"))
+
+
+
 # Fit data to older data with our 4 simple models
-sales_fit <- older_data |>
+sales_fit <- train_data |>
   model(
     Mean = MEAN(Sales_residential),
     `Naive` = NAIVE(Sales_residential),
-    `Seasonal naive` = SNAIVE(Sales_residential),
+    `Seasonal naive` = SNAIVE(Sales_residential ~ lag("year")),
     Drift = RW(Sales_residential ~ drift())
   )
 
@@ -1097,7 +1099,7 @@ sales_fit <- older_data |>
 sales_fc <- sales_fit |>
   forecast(h = "1 years")
 
-#Plot
+#Plot simple models forecast vs real data
 sales_fc |>
   autoplot(
     data_tsbl,
@@ -1105,16 +1107,20 @@ sales_fc |>
   ) +
   labs(
     y = "Sales MWh",
-    title = "Forecasts for quarterly beer production"
+    title = "Forecasts for Sales residential"
   ) +
   guides(colour = guide_legend(title = "Forecast"))
 
 # Graphically we see that the best simple model is the Seasonal naive
 # Lets compute our metrics
-  # The accuracy() function will automatically extract the relevant periods from 
-  # the data (recent_production in this example) to match the forecasts when 
-  # computing the various accuracy measures.
-accuracy(sales_fc, recent_data)
+# The accuracy() function will automatically extract the relevant periods from 
+# the data to match the forecasts when computing the various accuracy measures.
+# i.e. recent data must overlap with forecast period and accuracy() will automatically 
+# take that period for testing
+
+#ACCURACIES will be our tibble where we store all metrics of models
+accuracies <-accuracy(sales_fc, test_data)
+accuracies
   # The measures calculated are:
   # ME: Mean Error
   # RMSE: Root Mean Squared Error
@@ -1123,6 +1129,8 @@ accuracy(sales_fc, recent_data)
   # MAPE: Mean Absolute Percentage Error
   # MASE: Mean Absolute Scaled Error
   # ACF1: Autocorrelation of errors at lag 1.
+
+
 
 
 ############
@@ -1227,11 +1235,6 @@ plot(res)
 # white noise residuals indicate good candidate for forecasting
 Acf(res)
 
-### QUESTION: DOES IT MAKE SENSE TO FIT A BASS MODEL HERE?
-# R: does not make sense sinse bass models decribes the process of how  new
-# products get adopted in a population
-# The assumption of the Bass Model is product growth
-# TODO: Try Bass Models
 
 ################
 # 2. Multiple linear regression model
@@ -1250,7 +1253,7 @@ Acf(res)
 # numerical_data is already only post 2012
 
 
-##########
+###
 # OPTION 1: STEPWISE REDUCTION WITH ALL VARIABLES (NO SUBJECTIVE SELECTION)
 lr_fullModel = lm(Sales_residential ~ ., data=numerical_data, family = gaussian)
 summary(lr_fullModel)
@@ -1287,6 +1290,7 @@ reduce_multicollinearity <- function(model) {
   
   return(model)
 }
+
 # Reduce colinearity
 new_model_1 <- reduce_multicollinearity(lr_step_aic)
 # Summary
@@ -1296,11 +1300,11 @@ extractAIC(new_model_1)
 # Very high fit but also has Revenue_residential and Sales_total which
 # has a correlation value of 0.89 as its a function of sales, we should remove
 # it
-acf(residuals(new_model_1))
+acf(residuals(new_model_1)) # still seasonality in residuals
 
-# We should not use option 1
+# We should not use this option
 
-####
+###
 # OPTION 2: SUBJECTIVE FEATURE SELECTION as first step (using logic)
 #Lets remove those predictors that are a function of others, example revenue
 # [1] "Combined.Heat.and.Power..Electric.Power" Y        
@@ -1336,15 +1340,52 @@ formula_object <- as.formula(formula_string)
 # Fit the model using the formula
 new_model_2 <- lm(formula_object, data=numerical_data)
 # Stepwise selection of variables
-new_model_2_step = step(new_model_2, direction="both", trace=0, steps=1000)
+new_model_2 = step(new_model_2, direction="both", trace=0, steps=1000)
 # Reduce colinearity
-new_model_2_step <- reduce_multicollinearity(new_model_2)
-vif(new_model_2_step)
-summary(new_model_2_step)
-extractAIC(new_model_2_step)
-acf(residuals(new_model_2_step))
+new_model_2 <- reduce_multicollinearity(new_model_2)
+vif(new_model_2)
+summary(new_model_2)
+extractAIC(new_model_2)
+acf(residuals(new_model_2)) # we can see strong seasonality
 
-# In summary: Multiple linear regression  not a good option!!
+# In summary: Multiple linear regression doesn't seem like a good option (?)!!
+
+#####################
+# Exponential smoothing
+# We want a method that takes into account seasonality as we have seen
+# Holt Winters seasonal method
+# we basically have 2 variations: additive and multiplicative
+
+# Fit on test data
+hw_fit <- train_data |>
+  model(
+    # a) Additive is preferred when seasonal variations are roughly constant
+    # through the series
+    'hw_additive' = ETS(Sales_residential ~ error("A") + trend("A") +
+                     season("A")),
+    # b) Multiplicative is preferred when the seasonal variations are changing
+    # proportional to the level of the series
+    'hw_multiplicative' = ETS(Sales_residential ~ error("A") + trend("M") +
+                           season("M"))
+  )
+
+# Forecast with model
+hw_fc <- hw_fit |>
+  forecast(h= '1 year')
+
+# Plot forecast (takes a some time...)
+hw_fc |>
+  autoplot(data_tsbl, level = NULL) +
+  labs(title="Date",
+       y="Residential sales MWh") +
+  guides(colour = guide_legend(title = "Forecast"))
+
+# Compute accuracies
+hw_acc <- accuracy(hw_fc, test_data) # we could use (complete) data_tsbl and it would detect
+# the period to test on
+
+# Append accuracies to our tibble
+accuracies |> add_row(hw_acc)
 
 
 ############
