@@ -1001,7 +1001,7 @@ fit_snaive <- data_tsbl |> model(SNAIVE(Sales_residential ~ lag("year")))
 # Plot
 fit_snaive |>
   forecast(h = "2 years") |>
-  autoplot(data_tsbl)
+  autoplot(data_tsbl)  # seems to be the best (?)
 
 # Store residuals
 aug <- augment(fit_snaive)
@@ -1017,17 +1017,18 @@ aug |>
   ggplot(aes(x = .innov)) +
   geom_histogram() +
   labs(title = "Histogram of residuals")
-# Residuals appear to be somewhat normally distributed
+# Residuals appear to be somewhat normally distributed, but let's test with shapiro-wilk
+print(shapiro.test(aug$.innov)) # p-value suggest that is not normal distributed.
 
 # Plot autocorrelation of residuals: correlation of residuals
 aug |>
   ACF(.innov) |>
   autoplot() +
   labs(title = "Residuals from drift method")
-# Autocorrelation at lag 12
+# Autocorrelation at lag 12, which is 1 year.
 
 # 4. Drift method
-# variation of naive method that allows increase or decrease over time
+# The drift term introduces a linear trend, allowing the forecast to capture an increase or decrease over time.
 fit_rw <- data_tsbl |> model(RW(Sales_residential ~ drift()))
 # Plot
 fit_rw |>
@@ -1049,6 +1050,7 @@ aug |>
   geom_histogram() +
   labs(title = "Histogram of residuals")
 # Residuals appear to be somewhat normally distributed
+print(shapiro.test(aug$.innov)) # p-value suggest that is not normal distributed.
 
 # Plot ACF of residuals: correlation of residuals
 aug |>
@@ -1064,16 +1066,7 @@ aug |>
 # 4. The innovation residuals are normally distributed.
 
 # Forecasting with seasonally adjusted values
-# Fit model with seasonaly adjusted values except last year which takes seasonality
-fit_dcmp <- data_tsbl |>
-  model(stlf = decomposition_model(
-    STL(Sales_residential ~ trend(window = 12), robust = TRUE),
-    NAIVE(season_adjust)
-  ))
-# Plot model with forecast
-fit_dcmp |>
-  forecast() |>
-  autoplot(data_tsbl)
+
 
 ### Evaluating our simple methods
 # Evaluation of a forecasting method should be done on a test set, separate from training
@@ -1102,7 +1095,7 @@ sales_fc <- sales_fit |>
 #Plot simple models forecast vs real data
 sales_fc |>
   autoplot(
-    data_tsbl,
+    test_data,
     level = NULL
   ) +
   labs(
@@ -1234,7 +1227,7 @@ plot(res)
 # the form of residuals seems to indicate the presence of negative autocorrelation
 # white noise residuals indicate good candidate for forecasting
 Acf(res)
-
+# from acf, doesnt seems autocorrelation being present, low values.
 
 ################
 # 2. Multiple linear regression model
@@ -1356,7 +1349,7 @@ acf(residuals(new_model_2)) # we can see strong seasonality
 # Holt Winters seasonal method
 # we basically have 2 variations: additive and multiplicative
 
-# Fit on test data
+# Fit on train data
 hw_fit <- train_data |>
   model(
     # a) Additive is preferred when seasonal variations are roughly constant
@@ -1373,16 +1366,16 @@ hw_fit <- train_data |>
 hw_fc <- hw_fit |>
   forecast(h= '1 year')
 
-# Plot forecast (takes a some time...)
+# Plot forecast (takes some time...)
 hw_fc |>
-  autoplot(data_tsbl, level = NULL) +
+  autoplot(test_data, level = NULL) +
   labs(title="Date",
        y="Residential sales MWh") +
   guides(colour = guide_legend(title = "Forecast"))
 
 # Compute accuracies
 hw_acc <- accuracy(hw_fc, test_data) # we could use (complete) data_tsbl and it would detect
-# the period to test on
+
 
 # Append accuracies to our tibble
 accuracies |> add_row(hw_acc)
@@ -1424,6 +1417,7 @@ arima1 <- Arima(ressales_ts, order = c(0, 1, 2), seasonal = c(0, 1, 2)) # AIC=57
 arima2 <- Arima(ressales_ts, order = c(0, 1, 0), seasonal = c(0, 0, 2)) # AIC=6327.95
 arima3 <- Arima(ressales_ts, order = c(2, 1, 0), seasonal = c(0, 0, 2)) # AIC=6304.43
 
+
 # best ARIMA
 arima1
 
@@ -1453,6 +1447,9 @@ checkresiduals(arima1)
 # Try auto arima
 auto.arima <- auto.arima(ressales_ts) # AIC=5879.92
 auto.arima # ARIMA(1,0,0)(1,1,0)[12] with drift
+arimadef = auto.arima(ressales_ts, lambda = "auto", stepwise = TRUE, approximation = FALSE, allowdrift = FALSE)
+summary(arimadef)
+#without drift gives AIC=2534. ARIMA(0,0,3)(0,1,1)[12]
 
 # Forecast with ARIMA
 # Randomly pick starting index for training set: start_index =  sample(1:500, 1)
@@ -1462,7 +1459,31 @@ auto.arima # ARIMA(1,0,0)(1,1,0)[12] with drift
 # Forecast with fitted model: pred_arima_partial = forecast(arima_partial, h = test_size)
 # Plot predictions: c(arima_partial$fitted, pred_arima_partial$mean)
 
-# Lagged Regressors
+colnames(train_data)
+# Convert train_data and test_data to time series if not already in tsibble format
+train_data_ts <- as_tsibble(train_data, index='DATE')
+test_data_ts <- as_tsibble(test_data, index='DATE',key='Sales_residential')
+arima_model = auto.arima(train_data_ts$Sales_residential, lambda = "auto", stepwise = TRUE, approximation = FALSE, allowdrift = FALSE)
+print(arima_model)
+
+
+# forecast
+forecasts = forecast(arima_model)
+# Plotting with autoplot
+autoplot(forecasts, main = "ARIMA Forecast on sales")
+
+# accuracy
+accuracy(forecasts, test_data_ts$Sales_residential)
+# check residuals
+residuals = residuals(arima_model)
+acf(residuals, main = "ACF of ARIMA Residuals")   # little bit of seasonality
+
+# plot residuals
+autoplot(residuals)
+# check distribution on histogram
+hist(residuals)
+# shapiro-wilk test for normality
+shapiro.test(residuals) # p-value suggest is not normal.
 
 # Overall Schematic of Project
 # 1. Describe story of energy generation and consumption for electricity in DC
@@ -1483,3 +1504,43 @@ auto.arima # ARIMA(1,0,0)(1,1,0)[12] with drift
 # Seasonal Autoregressive Integrated Moving Average (SARIMA)
 # Seasonal Exponential Smoothing (ETS)
 # XGBoost and LightGBM Boosting Algorithms
+
+
+
+############################## XGBoost
+library(xgboost)
+library(caret)
+
+set.seed(123)
+
+parts = createDataPartition(data$Sales_residential, p=0.8, list=F)
+train = data[parts, ]
+test = data[-parts, ]
+
+train_x = data.matrix(train[, -13])
+train_y = train[, 13]
+
+test_x = data.matrix(test[, -13])
+test_y = test[, 13]
+
+xgb_train = xgb.DMatrix(data = train_x, label = train_y)
+xgb_test = xgb.DMatrix(data=test_x, label=test_y)
+
+watchlist = list(train = xgb_train, test = xgb_test)
+
+#fit XGBoost model and display training and testing data at each round
+model = xgb.train(data = xgb_train, max.depth = 3, watchlist=watchlist, nrounds = 100)
+pred_y = predict(model, newdata = xgb_test)
+
+mean((test_y - pred_y)^2) #mse
+caret::MAE(test_y, pred_y) #mae
+caret::RMSE(test_y, pred_y) #rmse
+
+# it's just garbage.
+
+################################# LightGBM Boosting
+
+library(lightgbm)
+
+train = lgb.Dataset(train_x, train_y)
+lightgbm(data = train_x, label = train_y, nrounds = 50, verbose = 1)
