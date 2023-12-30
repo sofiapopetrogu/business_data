@@ -931,12 +931,12 @@ data_tsbl |>
 
 ### AUTO CORRELATIONS
 # Run Acf:
+
 Acf(data$Sales_residential, main = "Autocorrelation for Residential Sales")
 # The lack of decay in the autocorrelation at the seasonal lags
 # may suggest a strong and persistent seasonality in the data
 # We can see a very strong autocorrelation at months 5,6,7 which reflects the
 # changes between winter - summer
-
 # Run pAcf:
 Pacf(data$Sales_residential, main = "Partial autocorrelation for Residential Sales")
 # more gradual decay in the partial autocorrelation indicates that
