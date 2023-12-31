@@ -216,11 +216,6 @@ ggplot(avg_data, aes(x = factor(month), y = avg_generation, fill = as.character(
     vjust = -0.5, color = "black", size = 6
   )
 
-
-
-
-
-
 # Average monthly energy generation from petroleum pre 2011
 pre2011_avg_pet_data <- pre2011_subset_data %>%
   group_by(month) %>%
@@ -653,7 +648,6 @@ ggplot(data, aes(x = DATE, y = Sales_residential)) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 # note to look for monthly or annual population data in DC
-
 
 # Plot for Commercial Sales
 ggplot(data, aes(x = DATE, y = Sales_commercial)) +

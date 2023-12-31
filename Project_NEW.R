@@ -1,3 +1,8 @@
+# Energy Data Business Project
+# Project Members: Esteban Ortega Dominguez, Mattia Varagnolo, Sofia Pope Trogu
+# 2023-2024
+
+
 ################################# LIBRARIES #############################
 # Data manipulation and Analysis
 library(dplyr)
@@ -41,7 +46,8 @@ custom_theme <- function() {
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       panel.border = element_blank(),
-      axis.line = element_line(color = "black")
+      axis.line = element_line(color = "black"),
+      axis.text.x = element_text(angle = 45, hjust = 1)
     )
 }
 
