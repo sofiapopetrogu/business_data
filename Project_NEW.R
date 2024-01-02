@@ -133,11 +133,15 @@ data_tsbl = data #copy
 data_tsbl$DATE = yearmonth(data_tsbl$DATE)
 data_tsbl <- as_tsibble(data_tsbl, index = DATE)
 
-train_data <- data_tsbl |>
+train_data_full <- data_tsbl |>
   filter(DATE < yearmonth("2022-01")) 
 
 test_data <- data_tsbl |>
   filter(DATE >= yearmonth("2022-01"))
+
+train_data_split <- data_tsbl |>
+  filter(DATE < yearmonth("2022-01")) |>
+  filter(DATE > yearmonth("2012-01"))
 
 # representing our data as a time series for regression
 ressales_ts <- ts(data$Sales_residential, frequency = 12)
@@ -223,7 +227,7 @@ ggplot(dcmp_long[dcmp_long$series %in% c("Sales_residential", "season_adjust"), 
 # 4. DRIFT | Forecast is a linear extrapolation from the last two observed values
 
 # FIT
-sales_fit <- train_data |>
+sales_fit <- train_data_full |>
   model(
     Mean = MEAN(Sales_residential),
     `Naive` = NAIVE(Sales_residential),
@@ -231,14 +235,14 @@ sales_fit <- train_data |>
     Drift = RW(Sales_residential ~ drift())
   )
 
-# FORECAST
+# FORECAST on full
 sales_fc <- sales_fit |>
   forecast(h = "1 years")
 
 # PLOT on TRAIN
 sales_fc |>
   autoplot(
-    train_data,
+    train_data_full,
     level = NULL
   ) +
   labs(
@@ -292,7 +296,8 @@ residuals_all <- rbind(transform(residuals_mean, Model = "Mean"),
 # Create a boxplot to compare residuals across models
 ggplot(residuals_all, aes(x = Model, y = .resid)) +
   geom_boxplot() +
-  labs(title = "Residuals Comparison Across Models", y = "Residuals")
+  labs(title = "Residuals Comparison Across Models", y = "Residuals")+
+  custom_theme()
 
 # shapiro-wilk test to look for normality
 shapiro.test(residuals_mean$.resid)
@@ -395,6 +400,8 @@ plot(forecast(m1))
 plot(forecast(tslm_trend_season))
 plot(forecast(tslm_trend))
 
+
+
 #################################################### MULTIPLE LINEAR REGRESSION MODELS
 # Most important thing: select which predictor we'll use
 # stepwise selection
@@ -404,16 +411,38 @@ summary(lr_fullModel) # Multiple R-squared:  0.9906;	Adjusted R-squared:  0.9893
 lr_step_aic = step(lr_fullModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic) # Multiple R-squared:  0.9904;	Adjusted R-squared:  0.9897; F:  1259 on 20 and 243 DF;  p-value: < 0.0000000022
 
+################### PARTIAL DATASET (FROM 2012 TO 2022)
+lr_splitModel = lm(Sales_residential ~ ., data=numerical_data_split, family = gaussian)
+summary(lr_splitModel) # Multiple R-squared: 1; Adjusted R-squared 1; F: 3.704e+10 on 43 and 88 DF,  p-value: < 0.00000000000000022
+lr_step_aic_split = step(lr_splitModel, direction="both", trace=0, steps=1000)
+summary(lr_step_aic_split) # Multiple R-squared: 1; Adjusted R-squared: 1; F: 7.939e+10 on 21 and 110 DF,  p-value: < 0.00000000000000022
+
+
+
 #assess multicollinearity through VIF
 vif(lr_step_aic)
+vif(lr_step_aic_split)  # curious to see the different VIF between the two models. In general the second has higher VIF.
 
-#reduce collinearity
+#reduce collinearity FULL
 mlr = reduce_multicollinearity(lr_step_aic)
 vif(mlr)
 summary(mlr) # Multiple R-squared:  0.9606;	Adjusted R-squared:  0.9586; F:   469 on 13 and 250 DF;  p-value: < 0.00000000000000022
 extractAIC(mlr)
 # check autocorrelations in residuals
 acf(residuals(mlr))
+
+#reduce collinearity SPLIT
+mlr_split = reduce_multicollinearity(lr_step_aic_split)
+vif(mlr_split)
+summary(mlr_split) # Multiple R-squared:  0.9356;	Adjusted R-squared:  0.932; F: 258.5 on 14 and 249 DF;  p-value: < 0.00000000000000022
+extractAIC(mlr_split)
+# check autocorrelations in residuals
+acf(residuals(mlr_split)) # more negative autocorrelation between lag 15 and 20.
+
+
+# IN GENERAL FULL MODEL IS BETTER.
+
+
 
 ### TODO: i skipped the subjective stepwise because the rsquared is just horrible. let's decide together btw
 
@@ -422,8 +451,8 @@ acf(residuals(mlr))
 # We want a method that takes into account seasonality as we have seen
 # Holt Winters seasonal method
 
-## TRAIN
-hw_fit <- train_data |>
+## TRAIN full
+hw_fit_full <- train_data_full |>
   model(
     # a) Additive is preferred when seasonal variations are roughly constant
     # through the series
@@ -435,12 +464,39 @@ hw_fit <- train_data |>
                                 season("M"))
   )
 
-## FORECAST
-hw_fc <- hw_fit |>
+# TRAIN split
+hw_fit_split <- train_data_split |>
+  model(
+    # a) Additive is preferred when seasonal variations are roughly constant
+    # through the series
+    'hw_additive' = ETS(Sales_residential ~ error("A") + trend("A") +
+                          season("A")),
+    # b) Multiplicative is preferred when the seasonal variations are changing
+    # proportional to the level of the series
+    'hw_multiplicative' = ETS(Sales_residential ~ error("M") + trend("A") +
+                                season("M"))
+  )
+
+
+## FORECAST full
+hw_fc_full <- hw_fit_full |>
   forecast(h= '1 year')
 
-# Plot forecast (takes some time...)
-hw_fc |>
+## FORECAST split
+hw_fc_split <- hw_fit_split |>
+  forecast(h= '1 year')
+
+
+# Plot forecast full
+hw_fc_full |>
+  autoplot(test_data, level = NULL) +
+  labs(title="Date",
+       y="Residential sales MWh") +
+  guides(colour = guide_legend(title = "Forecast"))+
+  custom_theme()
+
+# Plot forecast split
+hw_fc_split |>
   autoplot(test_data, level = NULL) +
   labs(title="Date",
        y="Residential sales MWh") +
@@ -448,9 +504,10 @@ hw_fc |>
   custom_theme()
 
 # Compute accuracies
-hw_acc <- accuracy(hw_fc, test_data) # we could use (complete) data_tsbl and it would detect
-# Append accuracies to our tibble
-accuracies |> add_row(hw_acc)
+hw_acc_full <- accuracy(hw_fc_full, test_data) # we could use (complete) data_tsbl and it would detect
+hw_acc_split <- accuracy(hw_fc_split, test_data) # we could use (complete) data_tsbl and it would detect
+accuracies = bind_rows(accuracies, hw_acc_full)
+accuracies = bind_rows(accuracies, hw_acc_split)
 
 
 ###################################### ARIMA Models
@@ -465,7 +522,8 @@ tsdisplay(ressales_ts_df)
 # Plot differentiated data to check for stationarity:
 
 p_ts_df <- autoplot(ressales_ts_df, xlab = "Time", ylab = "ResidentialSales") +
-  ggtitle("Residential Sales (MWh) - Differentiated Series")
+  ggtitle("Residential Sales (MWh) - Differentiated Series")+
+  custom_theme()
 
 ggplotly(p_ts_df)
 # Differentiating the series we can see that it seems to be more
@@ -473,9 +531,11 @@ ggplotly(p_ts_df)
 
 # Residuals of differentiated series:
 p_acf_df <- ggAcf(ressales_ts_df) +
-  ggtitle("Acf Function for Diff Residential Sales")
+  ggtitle("Acf Function for Diff Residential Sales")+
+  custom_theme()
 p_pacf_df <- ggPacf(ressales_ts_df) +
-  ggtitle("Partial Acf Function for Diff Residential Sales")
+  ggtitle("Partial Acf Function for Diff Residential Sales")+
+  custom_theme()
 
 grid.arrange(p_acf_df, p_pacf_df, nrow = 2)
 # lag 6, 12, 18, 12 significant (mid-year)
@@ -489,9 +549,17 @@ summary(arima_model) # AIC=2534. ARIMA(0,0,3)(0,1,1)[12]
 ### FORECAST
 forecast_arima = forecast(arima_model)
 ### PLOT
-autoplot(forecast_arima, main = 'ARIMA Forecast on sales')
+autoplot(forecast_arima, main = 'ARIMA Forecast on sales')+
+  custom_theme()
 ### ACCURACY
-accuracy(forecast_arima, test_data$Sales_residential)
+arima_accuracy=accuracy(forecast_arima, test_data$Sales_residential)
+arima_accuracy = as_tibble_row(arima_accuracy[2,])
+arima_accuracy$.model = 'ARIMA'
+arima_accuracy$.type = 'Test'
+arima_accuracy$RMSSE =NA
+arima_accuracy = arima_accuracy[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+accuracies= bind_rows(accuracies, arima_accuracy)
 
 ### RESIDUALS
 p_arima_res <- ggplot(data, aes(x = residuals(arima_model))) +
@@ -505,3 +573,21 @@ shapiro.test(residuals(arima_model)) # suggest is not normal
 ### AUTOCORRELATIONS
 acf(residuals(arima_model)) # seems fine, very low.
 
+
+
+##################################### CHOOSING THE BEST MODEL ###############################
+
+# lets recap.
+# This is a summary of all the accuracies that we have right now.
+
+accuracies # simple models + exp smoothing + ARIMA
+
+
+summary(mlr) # Multiple R-squared:  0.9606;	Adjusted R-squared:  0.9586; F:   469 on 13 and 250 DF;  p-value: < 0.00000000000000022
+extractAIC(mlr)
+
+summary(mlr_split) # Multiple R-squared:  0.9356;	Adjusted R-squared:  0.932; F: 258.5 on 14 and 249 DF;  p-value: < 0.00000000000000022
+extractAIC(mlr_split)
+
+
+# I would say best model is among HW_ADDITIVE (SPLIT VERSION) and the mlr full model.
