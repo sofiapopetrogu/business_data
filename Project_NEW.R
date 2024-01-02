@@ -33,6 +33,8 @@ library(lmtest)
 library(car)
 library(xgboost)
 library(caret)
+library(timetk)
+library(tidyverse)
 
 # Miscellaneousr
 library(readxl)
@@ -442,6 +444,37 @@ acf(residuals(mlr_split)) # more negative autocorrelation between lag 15 and 20.
 
 # IN GENERAL FULL MODEL IS BETTER.
 
+predict_mlr = predict(mlr, newdata = test_data)
+predict_mlr_split = predict(mlr_split, new_data = test_data)
+
+accuracy_mlr = accuracy(predict_mlr, test_data$Sales_residential)
+accuracy_mlr_split = accuracy(predict_mlr_split, test_data$Sales_residential)
+
+
+
+accuracy_mlr=as_tibble(accuracy(predict_mlr, test_data$Sales_residential))
+accuracy_mlr$.model = 'MLR'
+accuracy_mlr$.type = 'Test'
+accuracy_mlr$MASE= NA
+accuracy_mlr$RMSSE = NA
+accuracy_mlr$ACF1 = NA
+accuracy_mlr = accuracy_mlr[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+accuracy_mlr_split=as_tibble(accuracy(predict_mlr_split, test_data$Sales_residential))
+accuracy_mlr_split$.model = 'MLR 2012'
+accuracy_mlr_split$.type = 'Test'
+accuracy_mlr_split$MASE= NA
+accuracy_mlr_split$RMSSE = NA
+accuracy_mlr_split$ACF1 = NA
+accuracy_mlr_split = accuracy_mlr_split[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+accuracies= bind_rows(accuracies, accuracy_mlr)
+accuracies = bind_rows(accuracies, accuracy_mlr_split)
+
+
+
+
+
 
 
 ### TODO: i skipped the subjective stepwise because the rsquared is just horrible. let's decide together btw
@@ -508,6 +541,34 @@ hw_acc_full <- accuracy(hw_fc_full, test_data) # we could use (complete) data_ts
 hw_acc_split <- accuracy(hw_fc_split, test_data) # we could use (complete) data_tsbl and it would detect
 accuracies = bind_rows(accuracies, hw_acc_full)
 accuracies = bind_rows(accuracies, hw_acc_split)
+
+
+
+#TRYING CROSS VALIDATION
+
+
+# Create a time series cross-validation plan
+cv_plan <- time_series_cv(
+  data = data,
+  date_var = DATE,
+  initial = "3 years",  # Adjust as needed
+  assess = "12 months",  # Adjust as needed
+  skip = "1 month",
+  cumulative = FALSE,
+  slice_limit = n()  # Use n() for the maximum number of slices
+)
+
+# Check the cross-validation plan
+cv_plan
+
+
+
+
+data$DATE <- as.Date(data$DATE, format = "%Y-%m-%d")
+
+
+
+
 
 
 ###################################### ARIMA Models
@@ -590,4 +651,10 @@ summary(mlr_split) # Multiple R-squared:  0.9356;	Adjusted R-squared:  0.932; F:
 extractAIC(mlr_split)
 
 
-# I would say best model is among HW_ADDITIVE (SPLIT VERSION) and the mlr full model.
+# I would say best model is among HW_ADDITIVE (SPLIT VERSION)
+
+# AIC is useless for HW models because is non-parametric.
+
+
+
+
