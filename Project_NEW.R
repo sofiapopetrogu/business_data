@@ -268,15 +268,17 @@ sales_fc |>
 
 # BEST MODEL: Seasonal NAIVE
 # ACCURACIES
-accuracies <-accuracy(sales_fc, test_data)
-accuracies  # The measures calculated are:
-            # ME: Mean Error
-            # RMSE: Root Mean Squared Error
-            # MAE: Mean Absolute Error
-            # MPE: Mean Percentage Error
-            # MAPE: Mean Absolute Percentage Error
-            # MASE: Mean Absolute Scaled Error
-            # ACF1: Autocorrelation of errors at lag 1.
+# The measures calculated are:
+# ME: Mean Error
+# RMSE: Root Mean Squared Error
+# MAE: Mean Absolute Error
+# MPE: Mean Percentage Error
+# MAPE: Mean Absolute Percentage Error
+# MASE: Mean Absolute Scaled Error
+# ACF1: Autocorrelation of errors at lag 1.
+
+accuracies_test <- accuracy(sales_fc, test_data)
+
 
 ################# RESIDUALS ANALYSIS
 fit_mean <- data_tsbl |> model(MEAN(Sales_residential))
@@ -398,9 +400,47 @@ acf(residuals(m1))
 ###### FORECAST
 # grey area 80%
 # light shaded area 95%
-plot(forecast(m1)) 
+plot(forecast(m1, h=13)) 
 plot(forecast(tslm_trend_season))
 plot(forecast(tslm_trend))
+
+
+###### ACCURACIES
+m1_acc = as_tibble(accuracy(forecast(m1, h=12), test_data$Sales_residential))
+tslm_trend_acc = as_tibble(accuracy(forecast(tslm_trend, h=12), test_data$Sales_residential))
+tslm_trend_season_acc = as_tibble(accuracy(forecast(tslm_trend_season, h=12), test_data$Sales_residential))
+
+m1_acc = m1_acc[2,]
+m1_acc$.model = 'tslm subset'
+m1_acc$.type = 'Test'
+m1_acc$MASE= NA
+m1_acc$RMSSE = NA
+m1_acc$ACF1 = NA
+m1_acc = m1_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+tslm_trend_acc = tslm_trend_acc[2,]
+tslm_trend_acc$.model = 'tslm trend'
+tslm_trend_acc$.type = 'Test'
+tslm_trend_acc$MASE= NA
+tslm_trend_acc$RMSSE = NA
+tslm_trend_acc$ACF1 = NA
+tslm_trend_acc = tslm_trend_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+tslm_trend_season_acc = tslm_trend_season_acc[2,]
+tslm_trend_season_acc$.model = 'tslm trend + season'
+tslm_trend_season_acc$.type = 'Test'
+tslm_trend_season_acc$MASE= NA
+tslm_trend_season_acc$RMSSE = NA
+tslm_trend_season_acc$ACF1 = NA
+tslm_trend_season_acc = tslm_trend_season_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+accuracies_test = bind_rows(accuracies_test, m1_acc)
+accuracies_test = bind_rows(accuracies_test, tslm_trend_acc)
+accuracies_test = bind_rows(accuracies_test, tslm_trend_season_acc)
+
+accuracies_test[accuracies_test$.model == 'tslm subset', 'ACF1'] = ACF1(residuals(m1))
+accuracies_test[accuracies_test$.model == 'tslm trend', 'ACF1'] = ACF1(residuals(tslm_trend))
+accuracies_test[accuracies_test$.model == 'tslm trend + season', 'ACF1'] = ACF1(residuals(tslm_trend_season))
 
 
 
@@ -468,12 +508,12 @@ accuracy_mlr_split$RMSSE = NA
 accuracy_mlr_split$ACF1 = NA
 accuracy_mlr_split = accuracy_mlr_split[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
 
-accuracies= bind_rows(accuracies, accuracy_mlr)
-accuracies = bind_rows(accuracies, accuracy_mlr_split)
+accuracies_test= bind_rows(accuracies_test, accuracy_mlr)
+accuracies_test = bind_rows(accuracies_test, accuracy_mlr_split)
 
 
-
-
+accuracies_test[accuracies_test$.model == 'MLR', 'ACF1'] = ACF1(residuals(mlr))
+accuracies_test[accuracies_test$.model == 'MLR 2012', 'ACF1'] = ACF1(residuals(mlr_split))
 
 
 
@@ -502,11 +542,11 @@ hw_fit_split <- train_data_split |>
   model(
     # a) Additive is preferred when seasonal variations are roughly constant
     # through the series
-    'hw_additive' = ETS(Sales_residential ~ error("A") + trend("A") +
+    'hw_additive_split' = ETS(Sales_residential ~ error("A") + trend("A") +
                           season("A")),
     # b) Multiplicative is preferred when the seasonal variations are changing
     # proportional to the level of the series
-    'hw_multiplicative' = ETS(Sales_residential ~ error("M") + trend("A") +
+    'hw_multiplicative_split' = ETS(Sales_residential ~ error("M") + trend("A") +
                                 season("M"))
   )
 
@@ -539,29 +579,11 @@ hw_fc_split |>
 # Compute accuracies
 hw_acc_full <- accuracy(hw_fc_full, test_data) # we could use (complete) data_tsbl and it would detect
 hw_acc_split <- accuracy(hw_fc_split, test_data) # we could use (complete) data_tsbl and it would detect
-accuracies = bind_rows(accuracies, hw_acc_full)
-accuracies = bind_rows(accuracies, hw_acc_split)
+accuracies_test = bind_rows(accuracies_test, hw_acc_full)
+accuracies_test = bind_rows(accuracies_test, hw_acc_split)
 
 
-
-#TRYING CROSS VALIDATION
-
-
-# Create a time series cross-validation plan
-cv_plan <- time_series_cv(
-  data = data,
-  date_var = DATE,
-  initial = "3 years",  # Adjust as needed
-  assess = "12 months",  # Adjust as needed
-  skip = "1 month",
-  cumulative = FALSE,
-  slice_limit = n()  # Use n() for the maximum number of slices
-)
-
-# Check the cross-validation plan
-cv_plan
-
-
+# TODO: Cross validation
 
 
 data$DATE <- as.Date(data$DATE, format = "%Y-%m-%d")
@@ -620,7 +642,8 @@ arima_accuracy$.type = 'Test'
 arima_accuracy$RMSSE =NA
 arima_accuracy = arima_accuracy[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
 
-accuracies= bind_rows(accuracies, arima_accuracy)
+accuracies_test = bind_rows(accuracies_test, arima_accuracy)
+accuracies_test[accuracies_test$.model == 'ARIMA', 'ACF1'] = ACF1(residuals(arima_model))
 
 ### RESIDUALS
 p_arima_res <- ggplot(data, aes(x = residuals(arima_model))) +
@@ -636,12 +659,13 @@ acf(residuals(arima_model)) # seems fine, very low.
 
 
 
+
 ##################################### CHOOSING THE BEST MODEL ###############################
 
 # lets recap.
 # This is a summary of all the accuracies that we have right now.
 
-accuracies # simple models + exp smoothing + ARIMA
+accuracies_test = accuracies_test |> select(-RMSSE,-MASE) # simple models + linerar regression + multi linear regression + exp smoothing + ARIMA
 
 
 summary(mlr) # Multiple R-squared:  0.9606;	Adjusted R-squared:  0.9586; F:   469 on 13 and 250 DF;  p-value: < 0.00000000000000022
@@ -651,7 +675,7 @@ summary(mlr_split) # Multiple R-squared:  0.9356;	Adjusted R-squared:  0.932; F:
 extractAIC(mlr_split)
 
 
-# I would say best model is among HW_ADDITIVE (SPLIT VERSION)
+# I would say best model is HW_ADDITIVE (SPLIT VERSION)
 
 # AIC is useless for HW models because is non-parametric.
 
