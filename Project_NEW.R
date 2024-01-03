@@ -25,7 +25,6 @@ library(corrplot)
 
 # Time Series forecasting
 library(forecast)
-library(prophet)
 library(qtl2)
 
 # Model and statistical testing
