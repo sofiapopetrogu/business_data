@@ -35,8 +35,9 @@ library(xgboost)
 library(caret)
 library(timetk)
 library(tidyverse)
+library(tsfknn)
 
-# Miscellaneousr
+# Miscellaneous
 library(readxl)
 library(reshape2)
 
@@ -119,6 +120,8 @@ find_correlations <- function(data, threshold = 0.1) {
   return(high_corr_df)
 }
 
+
+
 ############################# Data Preparation ############################
 options(scipen = 999) # to avoid scientific notation
 
@@ -148,8 +151,13 @@ train_data_split <- data_tsbl |>
 # representing our data as a time series for regression
 ressales_ts <- ts(data$Sales_residential, frequency = 12)
 
+
 # take a portion of data and fit a linear model with tslm
 ressales_ts_10 <- window(ressales_ts, start = 10, end = 22)
+
+ressales_ts_arima_train = ts(train_data_full$Sales_residential, frequency = 12) 
+
+
 
 # data after 2012
 numerical_data_split <- data[data$DATE >= as.Date("2012-01-01"), ]
@@ -278,6 +286,7 @@ accuracies  # The measures calculated are:
             # MASE: Mean Absolute Scaled Error
             # ACF1: Autocorrelation of errors at lag 1.
 
+
 ################# RESIDUALS ANALYSIS
 fit_mean <- data_tsbl |> model(MEAN(Sales_residential))
 fit_naive <- data_tsbl |> model(NAIVE(Sales_residential))
@@ -357,7 +366,7 @@ p_tslm_ts <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
 ggplotly(p_tslm_ts)
 
 # Create a sequence of dates from 2010 to 2022
-date_sequence <- seq(as.Date("2010-01-01"), as.Date("2022-01-01"), by = "2 year")
+date_sequence <- seq(2010, 2022, by=2)
 
 autoplot(ressales_ts_10, main = 'Real TimeSeries vs Fitted Values TSLM subset', y = 'Residential Sales (MWh') +
   custom_theme() +
@@ -388,6 +397,7 @@ print(p_tslm_ts_10_res_hist)
 dwtest(tslm_trend) # DW = 1.199, p<0.0001
 dwtest(tslm_trend_season) # DW = 1.7889, p-value < 0.05
 dwtest(m1) # DW = 1.8668, p-value = 0.2174
+
 
 ###### Autocorrelations
 acf(residuals(tslm_trend))
@@ -445,7 +455,35 @@ acf(residuals(mlr_split)) # more negative autocorrelation between lag 15 and 20.
 # IN GENERAL FULL MODEL IS BETTER.
 
 predict_mlr = predict(mlr, newdata = test_data)
-predict_mlr_split = predict(mlr_split, new_data = test_data)
+predict_mlr_split = predict(mlr_split, newdata = test_data)
+
+test_data_mlr = test_data
+test_data_mlr$DATE = as.Date(test_data$DATE)
+
+# Plot the actual test data
+plot(test_data_mlr$DATE, test_data$Sales_residential, type = "l", col = "black", lwd = 2,
+     xlab = "Month", ylab = "Response Variable", main = "MLR Predictions vs Actual",  xaxt = "n")+
+  axis(side = 1, at = test_data_mlr$DATE, labels = 1:12)+
+  lines(test_data_mlr$DATE, predict_mlr, col = "#ffa8a8", lwd = 2)
+
+
+
+legend("topleft", legend = c("Actual", "MLR Predictions"), col = c("black", "red"), lwd = 2)
+
+
+
+
+# Plot the actual test data
+plot(test_data_mlr$DATE, test_data$Sales_residential, type = "l", col = "black", lwd = 2, ylim = range(c(test_data$Sales_residential, predict_mlr_split)),
+     xlab = "Month", ylab = "Response Variable", main = "MLR Predictions vs Actual", xaxt="n")+
+  axis(side = 1, at = test_data_mlr$DATE, labels = 1:12)+
+  lines(test_data_mlr$DATE, predict_mlr_split, col = "#ffa8a8", lwd = 2)
+
+legend("topleft", legend = c("Actual", "MLR Predictions"), col = c("black", "red"), lwd = 2)
+
+
+
+
 
 accuracy_mlr = accuracy(predict_mlr, test_data$Sales_residential)
 accuracy_mlr_split = accuracy(predict_mlr_split, test_data$Sales_residential)
@@ -457,7 +495,7 @@ accuracy_mlr$.model = 'MLR'
 accuracy_mlr$.type = 'Test'
 accuracy_mlr$MASE= NA
 accuracy_mlr$RMSSE = NA
-accuracy_mlr$ACF1 = NA
+accuracy_mlr$ACF1 = ACF1(residuals(mlr))
 accuracy_mlr = accuracy_mlr[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
 
 accuracy_mlr_split=as_tibble(accuracy(predict_mlr_split, test_data$Sales_residential))
@@ -465,19 +503,12 @@ accuracy_mlr_split$.model = 'MLR 2012'
 accuracy_mlr_split$.type = 'Test'
 accuracy_mlr_split$MASE= NA
 accuracy_mlr_split$RMSSE = NA
-accuracy_mlr_split$ACF1 = NA
+accuracy_mlr_split$ACF1 = ACF1(residuals(mlr_split))
 accuracy_mlr_split = accuracy_mlr_split[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
 
 accuracies= bind_rows(accuracies, accuracy_mlr)
 accuracies = bind_rows(accuracies, accuracy_mlr_split)
 
-
-
-
-
-
-
-### TODO: i skipped the subjective stepwise because the rsquared is just horrible. let's decide together btw
 
 
 ################################################# Exponential Smoothing
@@ -502,11 +533,11 @@ hw_fit_split <- train_data_split |>
   model(
     # a) Additive is preferred when seasonal variations are roughly constant
     # through the series
-    'hw_additive' = ETS(Sales_residential ~ error("A") + trend("A") +
+    'hw_additive_split' = ETS(Sales_residential ~ error("A") + trend("A") +
                           season("A")),
     # b) Multiplicative is preferred when the seasonal variations are changing
     # proportional to the level of the series
-    'hw_multiplicative' = ETS(Sales_residential ~ error("M") + trend("A") +
+    'hw_multiplicative_split' = ETS(Sales_residential ~ error("M") + trend("A") +
                                 season("M"))
   )
 
@@ -543,34 +574,6 @@ accuracies = bind_rows(accuracies, hw_acc_full)
 accuracies = bind_rows(accuracies, hw_acc_split)
 
 
-
-#TRYING CROSS VALIDATION
-
-
-# Create a time series cross-validation plan
-cv_plan <- time_series_cv(
-  data = data,
-  date_var = DATE,
-  initial = "3 years",  # Adjust as needed
-  assess = "12 months",  # Adjust as needed
-  skip = "1 month",
-  cumulative = FALSE,
-  slice_limit = n()  # Use n() for the maximum number of slices
-)
-
-# Check the cross-validation plan
-cv_plan
-
-
-
-
-data$DATE <- as.Date(data$DATE, format = "%Y-%m-%d")
-
-
-
-
-
-
 ###################################### ARIMA Models
 # p: autoregresive component (AR): Captures the linear relationship between the current observation and its previous values (lags).
 # d: differencing of the time series to achieve stationarity. degrees of differencing needed
@@ -601,14 +604,28 @@ p_pacf_df <- ggPacf(ressales_ts_df) +
 grid.arrange(p_acf_df, p_pacf_df, nrow = 2)
 # lag 6, 12, 18, 12 significant (mid-year)
 
+
 # using auto.arima automatically it finds the best parameters.
-auto.arima <- auto.arima(ressales_ts) # AIC=5879.92
-auto.arima # ARIMA(1,0,0)(1,1,0)[12] with drift
-arima_model = auto.arima(ressales_ts, lambda = "auto", stepwise = TRUE, approximation = FALSE, allowdrift = FALSE) #without drift gives better results
-summary(arima_model) # AIC=2534. ARIMA(0,0,3)(0,1,1)[12]
+arima_model = auto.arima(train_data_full$Sales_residential, 
+                         lambda = "auto", 
+                         stepwise = FALSE,
+                         seasonal = TRUE,
+                         trace = TRUE,
+                         approximation = FALSE, 
+                         allowdrift = TRUE)
+summary(arima_model) # AIC=378.89. ARIMA(5,1,0)
+
+# let's try to use this model but to model the seasonality which apparently is not considered by auto.arima.
+
+arimamodel0 <- arima(train_data_full$Sales_residential, order = c(5,1,0), seasonal = list(order = c(1,0,1), period = 12))
+summary(arimamodel0)
+
+
+
 
 ### FORECAST
-forecast_arima = forecast(arima_model)
+forecast_arima = forecast(arima_model, h=12)
+forecast_arima0 = forecast(arimamodel0, h=12)
 ### PLOT
 autoplot(forecast_arima, main = 'ARIMA Forecast on sales')+
   custom_theme()
@@ -618,21 +635,83 @@ arima_accuracy = as_tibble_row(arima_accuracy[2,])
 arima_accuracy$.model = 'ARIMA'
 arima_accuracy$.type = 'Test'
 arima_accuracy$RMSSE =NA
+arima_accuracy$ACF1 = ACF1(residuals(arima_model))
 arima_accuracy = arima_accuracy[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+arima_accuracy
 
 accuracies= bind_rows(accuracies, arima_accuracy)
 
+arima_accuracy0=accuracy(forecast_arima0, test_data$Sales_residential)
+arima_accuracy0 = as_tibble_row(arima_accuracy0[2,])
+arima_accuracy0$.model = 'ARIMA_manual'
+arima_accuracy0$.type = 'Test'
+arima_accuracy0$RMSSE =NA
+arima_accuracy0$ACF1 = ACF1(residuals(arimamodel0))
+arima_accuracy0 = arima_accuracy0[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+accuracies= bind_rows(accuracies, arima_accuracy0)
+
 ### RESIDUALS
-p_arima_res <- ggplot(data, aes(x = residuals(arima_model))) +
+p_arima_res <- ggplot(ressales_ts_arima_train, aes(x = residuals(arima_model))) +
   geom_histogram(bins = 30, fill = "lightblue", color = "black") +
   labs(x = "Value", y = "Frequency", title = "Histogram of residuals with Trend")+
   custom_theme()
-ggplotly(p_arima_res)
 
-shapiro.test(residuals(arima_model)) # suggest is not normal
+p_arima_res0 <- ggplot(ressales_ts_arima_train, aes(x = residuals(arimamodel0))) +
+  geom_histogram(bins = 30, fill = "lightblue", color = "black") +
+  labs(x = "Value", y = "Frequency", title = "Histogram of residuals with Trend")+
+  custom_theme()
+
+ggplotly(p_arima_res)
+ggplotly(p_arima_res0)
+
+
+shapiro.test(residuals(arima_model)) # suggest is normal
+shapiro.test(residuals(arimamodel0)) # suggest is normal
 
 ### AUTOCORRELATIONS
-acf(residuals(arima_model)) # seems fine, very low.
+
+
+ggAcf(arima_model$residuals) # still some seasonality
+Pacf(residuals(arima_model))
+
+ggAcf(arimamodel0$residuals) # MUCH better. values are all under the threshold, even if seasonality still present.
+Pacf(arimamodel0$residuals) # very good indeed, even if some values are over the threshold.
+
+#  IMPORTANT: We can ignore one significant spike in each plot if it is just outside the limits, and not in the first few lags.
+
+
+
+
+
+
+############################ KNN
+
+pred <- knn_forecasting(train_data_full$Sales_residential, h = 12, lags = 1:12, k = 2, msas = "MIMO", transform = 'additive')
+autoplot(pred, highlight = "neighbors", faceting = FALSE)+
+  custom_theme()
+
+
+# The prediction is the average of the target vectors of the two nearest neighbors. 
+#  As can be observed, we have chosen to see all the nearest neighbors in the same plot. 
+# Because we are working with a monthly time series, we have thought that lags 1-12 are a suitable choice for selecting the features of the examples.
+
+ro <- rolling_origin(pred, h = 12, rolling=FALSE)
+
+ro$global_accu
+
+
+knn_acc = as_tibble_row(ro$global_accu)
+knn_acc$.model = 'KNN'
+knn_acc$.type = 'Test'
+knn_acc$RMSSE =NA
+knn_acc$ME = NA
+knn_acc$MPE = NA
+knn_acc$ACF1 = NA
+knn_acc$MASE = NA
+knn_acc = knn_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+accuracies= bind_rows(accuracies, knn_acc)
 
 
 
@@ -641,7 +720,11 @@ acf(residuals(arima_model)) # seems fine, very low.
 # lets recap.
 # This is a summary of all the accuracies that we have right now.
 
-accuracies # simple models + exp smoothing + ARIMA
+
+# let's consider RMSE as our main measure and print it ordered by it.
+accuracies |> 
+  select(-MASE, -RMSSE)|>
+  arrange(RMSE) # simple models + Multiple linear regression + exp smoothing + ARIMA + KNN
 
 
 summary(mlr) # Multiple R-squared:  0.9606;	Adjusted R-squared:  0.9586; F:   469 on 13 and 250 DF;  p-value: < 0.00000000000000022
