@@ -1538,3 +1538,152 @@ library(lightgbm)
 
 train = lgb.Dataset(train_x, train_y)
 lightgbm(data = train_x, label = train_y, nrounds = 50, verbose = 1)
+
+
+############### Additional Modelling
+
+# 3. Add other explanatory variables: residential customers, avg price, generation and modify time series with sales
+# 4. Focus on timeframe from 2012-2022 since data is more reliable then and there is the transition from Petroleum to alternatives and renewables
+# 5. Add other series for more information: temperature data
+
+# using res sales data from 2010 to 2012
+m1 <- tslm(ressales_ts_10 ~ trend + season)
+summary(m1)
+# R2=0.7637, F-stat=35.55, p<0.0001
+
+# add other variables to tslm model based on correlation
+
+post2012_subset_data <- data[data$DATE >= as.Date("2012-01-01"), ]
+
+post2012_subset_data$Petroleum <- abs(post2012_subset_data$Petroleum)
+post2012_subset_data$total_generation_producer <- rowSums(post2012_subset_data[, 2:5])
+post2012_subset_data$total_generation_source <- rowSums(post2012_subset_data[, 6:9])
+post2012_subset_data$month <- month(post2012_subset_data$DATE, label = TRUE)
+
+summary(post2012_subset_data)
+head(post2012_subset_data)
+
+
+# # Assuming numeric_data contains your numeric columns
+# numeric_data <- post2010_subset_data[sapply(post2010_subset_data, is.numeric)]
+# 
+# # Calculate standard deviation for each numeric column
+# std_devs <- sapply(numeric_data, sd)
+# 
+# # Identify columns with zero standard deviation
+# zero_std_dev_columns <- names(std_devs)[std_devs == 0]
+# 
+# # Print the columns with zero standard deviation
+# print(zero_std_dev_columns)
+
+# Remove the "Customers_industrial" column since it has STD DEV of 0
+modified_data <- post2012_subset_data[, !(names(post2012_subset_data) %in% c("Customers_industrial"))]
+
+# Now call the find_correlations function with the modified dataset
+corr_df_sub <- find_correlations(modified_data, threshold = 0.01)
+
+# Print relevant correlations
+corr_sales2 <- corr_df_sub[corr_df_sub$Column1 == "Sales_residential", ]
+sorted_corr2 <- corr_sales2[order(abs(corr_sales2$Correlation), decreasing = TRUE), ]
+sorted_corr2
+
+# Correlations 
+# very weak correlation: abs(r) < 0.25
+# weak correlation: 0.25 <= abs(r) < 0.4
+# moderate correlation: 0.4 <= abs(r) < 0.6
+# strong correlation: 0.6 <- abs(r) < 0.8
+# very strong correlation: abs(r) >= 0.8
+
+# var very strong correlation: Revenue_residential
+# var strong correlation: Sales_total and Revenue_total (redundant-don't use)
+# var moderate correlation: 
+# var weak correlation in descending order only relevant: 
+# tmin, total_renew_source, Other.Biomass (redundant?), Price_residential, tavg,Customers_residential,
+# cont'd:  tmax, prcp
+
+ressales_ts_2012 <- ts(post2012_subset_data$Sales_residential, frequency = 12)
+
+m1 <- tslm(ressales_ts_2012 ~ trend + season)
+summary(m1)
+# R2=0.7384, F-stat=27.99, p<0.00000000000000022
+
+m2 <- tslm(ressales_ts_2012 ~ trend + season + Revenue_residential,
+           data = post2012_subset_data)
+summary(m2)
+# R2=0.9657, F-stat=255.6, p<0.00000000000000022
+# rev residential is significant
+
+m3 <- tslm(ressales_ts_2012 ~ trend+season+Revenue_residential+tmin+Price_residential+Customers_residential ,
+           data = post2012_subset_data)
+summary(m3)
+# R2=0.9978, F-stat=3301, < 0.00000000000000022
+# rev res, price_residential, customers_residentisl significant, tmin not sig
+
+m4 <- tslm(ressales_ts_2012 ~ trend+season+Revenue_residential+tmin ,
+           data = post2012_subset_data)
+summary(m4)
+# R2=0.9659, F-stat=236.7, < 0.00000000000000022
+# rev res significant, tmin not significant
+
+# remove price since revenue and price tell you the same thing
+m5 <- tslm(ressales_ts_2012 ~ trend+season+Revenue_residential+tmin+Customers_residential ,
+           data = post2012_subset_data)
+summary(m5)
+# R2=0.966, F-stat=219.5, < 0.00000000000000022
+# rev res significant, tmin, customers_res not sig
+
+m6 <- tslm(ressales_ts_2012 ~ trend+season+Revenue_residential+Customers_residential ,
+           data = post2012_subset_data)
+summary(m6)
+# R2=0.9658, F-stat=236.1, < 0.00000000000000022
+# rev res, customers_residential NOT significant
+
+m7 <- tslm(ressales_ts_2012 ~ trend+season+Revenue_residential+tavg ,
+           data = post2012_subset_data)
+summary(m7)
+# tavg not significant, rev residential sig
+
+# Summary of TSLM Multiple Variable Regression Models: 
+# Using data starting in 2012, found the highest correlations. Based on these,
+# ran several tslm models adding the different relevant variables in a subjective way
+# Model 3 (m3) performed the best in terms of R2 and F-stat - but concern of overfitting
+# Use model 2 as final model
+
+tslm_model <- m2
+
+library(scales)
+# Create a sequence of dates from 2010 to 2022
+date_sequence <- seq(as.Date("2012-01-01"), as.Date("2022-01-01"), by = "2 year")
+
+autoplot(ressales_ts_2012, main = 'Real Data vs. Fitted Values with the Final TSLM Model', y = 'Residential Sales (MWh') +
+  custom_theme() +
+  geom_line(aes(y = ressales_ts_2012), color = "black", linetype = "solid") +
+  geom_line(aes(y = fitted(tslm_model)), color = "red", linetype = "solid") +
+  scale_x_continuous(breaks = seq(2, 12, by = 2), labels = date_sequence)
+
+## RESIDUALS
+p_tslm_ts_12_res_hist <- ggplot(ressales_ts_2012, aes(x = residuals(tslm_model))) +
+  geom_histogram(bins = 30, fill = "lightblue", color = "black") +
+  labs(x = "Value", y = "Frequency", title = "Histogram of residuals with Trend and Season on subset")+
+  custom_theme()
+print(p_tslm_ts_12_res_hist)
+# normal dist of residuals
+
+# dwtest(tslm_trend) # DW = 1.199, p<0.0001
+# dwtest(tslm_trend_season) # DW = 1.7889, p-value < 0.05
+# dwtest(m1) # DW = 1.8668, p-value = 0.2174
+
+dwtest(tslm_model) # 0.80662 - bad result for DW test
+dwtest(m1) # DW = 1.8849 - original model without residential revenue, high p = 0.2597
+
+Acf(residuals(m1)) # pretty much all insignificant residual peaks - use to forecast
+Acf(residuals(tslm_model)) # not white noise residuals
+
+# FORECAST
+ 
+plot(forecast(m1, h=13)) 
+
+m1_acc = as_tibble(accuracy(forecast(m1, h=12), test_data$Sales_residential))
+
+m1_acc
+
