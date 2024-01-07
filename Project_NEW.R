@@ -472,7 +472,6 @@ summary(lr_splitModel) # Multiple R-squared: 1; Adjusted R-squared 1; F: 3.704e+
 lr_step_aic_split = step(lr_splitModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic_split) # Multiple R-squared: 1; Adjusted R-squared: 1; F: 7.939e+10 on 21 and 110 DF,  p-value: < 0.00000000000000022
 
-# TODO: Fit a tslm model using the selected variables
 
 #assess multicollinearity through VIF
 vif(lr_step_aic)
@@ -757,16 +756,104 @@ knn_acc = knn_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE
 
 accuracies= bind_rows(accuracies, knn_acc)
 
-# TODO: Generalized Additive Model (GAM)
-# From slides: GAMs extend a standard linear model by allowing non-linear functions of each of 
-# the variables, while maintaining additivity.
-# we can use splines and local regression as building blocks for fitting an additive model
-# we calculate a separate fj for each Xj and then add together all of their contributions.
+################################## Generalized Additive Model (GAM)
 
 # First pull our baseline linear regression model
+
+tt <- 1:length(ressales_ts)
+seas <- factor(rep(1:12, length.out = length(ressales_ts)))
+
 library(gam)
 
-g1 <- 
+g1 <- lm(ressales_ts~ tt+seas) # baseline linear regression model
+summary(g1) # Multiple R-squared:  0.7941,	Adjusted R-squared:  0.7842 F-statistic: 80.65 on 12 and 251 DF,  p-value: < 0.00000000000000022
+AIC(g1) # 6062.793
+
+# add smoothing spline for trend
+g2 <- gam(ressales_ts~ s(tt)+seas)
+summary(g2) # have ANOVA for parametric and non-parametric effects: both effects are significant
+# time has a non-linear effect
+plot(g2, se=T) # diagnostic plot called "Partial Residuals vs. Fitted Values."
+AIC(g2) # 6054.869
+
+####try another option with loess (lo)
+g3<- gam(ressales_ts~lo(tt)+seas)
+summary(g3) # simmilar results to g2
+plot(g3, se=T)
+AIC(g3) # 6054.832
+
+# Residual Analysis
+tsdisplay(residuals(g3)) # non significant residuals
+
+# Plot better later
+plot(as.numeric(ressales_ts), type="l")
+lines(fitted(g3), col ="red") # fit according to GAM (g1)
+
+# Next, try more complicated gam with gam.scope for stepwise selection
+
+numeric_train_data <- train_data_full %>%
+  select_if(is.numeric)
+
+# removed ind and transportation customers since they had less than 3 unique values
+g4 <- gam(Sales_residential~.-Customers_industrial-Customers_transportation-DATE, data=numeric_train_data)
+
+#Show the linear effects 
+par(mfrow=c(3,5))
+plot(g4, se=T) 
+summary(g4) 
+
+#Perform stepwise selection procedure using gam scope
+#Values for df should be greater than 1, with df=1 implying a linear fit
+#determines set of variables that need to be inserted in final model
+
+sc = gam.scope(numeric_train_data[,c(-11,-38)], response=11, arg=c("df=2","df=3","df=4"))
+g5<- step.Gam(g4, scope=sc, trace=T) # use first model g4 as starting point and then add scope
+
+summary(g5) # sig effects for both parametetric and nonparametric
+
+AIC(g4) #5045.061
+AIC(g5) #4716.624
+
+par(mfrow=c(3,5))
+plot(g5, se=T)
+
+# if we want to see better some plots
+par(mfrow=c(1,1))
+plot(g5, se=T, ask=T)
+
+#Prediction
+p.gam <- predict(g5,newdata=test_data)  
+gam_accuracy <- accuracy(p.gam, test_data$Sales_residential)
+
+# TRY ON SPLIT DATASET
+numeric_train_split_data <- train_data_split %>%
+  select_if(is.numeric)
+
+g4_split <- gam(Sales_residential~.-Customers_industrial-Customers_transportation-DATE-Electric.Generators..Electric.Utilities , data=numeric_train_split_data)
+
+par(mfrow=c(3,5))
+plot(g4_split, se=T) 
+summary(g4_split) 
+
+sc_split = gam.scope(numeric_train_split_data[,c(-11,-38)], response=11, arg=c("df=2","df=3","df=4"))
+g5_split<- step.Gam(g4_split, scope=sc_split, trace=T) 
+
+summary(g5_split) # not significant for non-parametric
+# Warning message:
+# In anova.lm(object.lm, ...) :
+#   ANOVA F-tests on an essentially perfect fit are unreliable
+
+AIC(g4_split) #159.7907
+AIC(g5_split) #141.1391
+
+#compare to full
+AIC(g4) #5045.061
+AIC(g5) #4716.624
+
+#Prediction
+p.gam.split <- predict(g5_split,newdata=test_data)  
+gam_split_accuracy <- accuracy(p.gam.split, test_data$Sales_residential)
+
 ##################################
 
 
@@ -775,19 +862,19 @@ g1 <-
 
 
 ################## GRADIENT BOOSTING
-# 
-# library(xgboost)
-# library(gbm)
-# 
-# train_gbm = train_data_full[, !names(train_data_full) %in% "DATE", drop = FALSE] #it gave errors with the DATE variable.
-# 
-# model_gbm = gbm(Sales_residential ~.,
-#                 data = train_gbm,
-#                 distribution = "gaussian",
-#                 cv.folds = 5,
-#                 shrinkage = .001,
-#                 n.minobsinnode = 10,
-#                 n.trees = 20000)
+
+library(xgboost)
+library(gbm)
+
+train_gbm = train_data_full[, !names(train_data_full) %in% "DATE", drop = FALSE] #it gave errors with the DATE variable.
+
+model_gbm = gbm(Sales_residential ~.,
+                data = train_gbm,
+                distribution = "gaussian",
+                cv.folds = 5,
+                shrinkage = .001,
+                n.minobsinnode = 10,
+                n.trees = 20000)
 #i've tried several parameters and those seems the best.
 
 ############# ACCURACIES
