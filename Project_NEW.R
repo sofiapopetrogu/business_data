@@ -152,15 +152,17 @@ train_data_split <- data_tsbl |>
 ressales_ts <- ts(data$Sales_residential, frequency = 12)
 
 
-# take a portion of data and fit a linear model with tslm
-ressales_ts_10 <- window(ressales_ts, start = 10, end = 22)
+# take a portion of data and fit a linear model with tslm; 2010 onward
+ressales_ts_10 <- window(ressales_ts, start = 10)
 
+# 2001-2021
 ressales_ts_arima_train = ts(train_data_full$Sales_residential, frequency = 12) 
 
 
 
-# data after 2012
-numerical_data_split <- data[data$DATE >= as.Date("2012-01-01"), ]
+# numerical data after 2012
+numerical_data_split <- data[data$DATE >= as.Date("2012-01-01"), ]%>%
+  select_if(is.numeric)
 
 # full dataset
 numerical_data <- data %>%
@@ -317,7 +319,7 @@ shapiro.test(residuals_mean$.resid)
 shapiro.test(residuals_naive$.resid)
 shapiro.test(residuals_snaive$.resid)
 shapiro.test(residuals_drift$.resid)
-# all of them has enough p-value to reject null hypothesis so for shapiro-wilk test they're not normal.
+# all of them has a small enough p-value to reject null hypothesis so for shapiro-wilk test they're not normal.
 
 ######## Autocorrelations of Residuals
 acf(residuals_mean$.resid, main='ACF for Mean')
@@ -337,7 +339,7 @@ summary(tslm_trend_season) # R-squared = 0.7941; F = 80.65 with 251 df; p < 0.00
 
 ######### 3. Trend + Season on subset
 m1 <- tslm(ressales_ts_10 ~ trend + season)
-summary(m1) # R-squared = 0.7637; F = 35.55 with ; p<0.0001
+summary(m1) # R-squared = 0.769; F = 39.66 with ; p< 0.00000000000000022
 
 ########## PLOTTING AND RESIDUALS ANALYSIS
 ## PLOT VALUES vs FITTED
@@ -396,7 +398,7 @@ print(p_tslm_ts_10_res_hist)
 ## DW TEST (to detect autocorrelations) dw=2 desired, dw<2 positive autocorrelation.
 dwtest(tslm_trend) # DW = 1.199, p<0.0001
 dwtest(tslm_trend_season) # DW = 1.7889, p-value < 0.05
-dwtest(m1) # DW = 1.8668, p-value = 0.2174
+dwtest(m1) # DW = 1.8362, p-value = 0.1595
 
 
 ###### Autocorrelations
@@ -450,22 +452,27 @@ accuracies[accuracies$.model == 'tslm subset', 'ACF1'] = ACF1(residuals(m1))
 accuracies[accuracies$.model == 'tslm trend', 'ACF1'] = ACF1(residuals(tslm_trend))
 accuracies[accuracies$.model == 'tslm trend + season', 'ACF1'] = ACF1(residuals(tslm_trend_season))
 
+# seasonal Naive still appears to be outperforming in performance metrics
+accuracies
 
 #################################################### MULTIPLE LINEAR REGRESSION MODELS
 # Most important thing: select which predictor we'll use
 # stepwise selection
 ################### FULL DATASET (FROM 2001 TO 2022)
-lr_fullModel = lm(Sales_residential ~ ., data=numerical_data, family = gaussian)
+lr_fullModel = lm(Sales_residential ~ ., data=numerical_data)
 summary(lr_fullModel) # Multiple R-squared:  0.9906;	Adjusted R-squared:  0.9893 F = 760.2 on 32 and 231 DF;  p-value: < 0.0000000022
 lr_step_aic = step(lr_fullModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic) # Multiple R-squared:  0.9904;	Adjusted R-squared:  0.9897; F:  1259 on 20 and 243 DF;  p-value: < 0.0000000022
 
 ################### PARTIAL DATASET (FROM 2012 TO 2022)
-lr_splitModel = lm(Sales_residential ~ ., data=numerical_data_split, family = gaussian)
+
+# Note: stepwise function getting warnings since fit is already 1
+lr_splitModel = lm(Sales_residential ~ ., data=numerical_data_split)
 summary(lr_splitModel) # Multiple R-squared: 1; Adjusted R-squared 1; F: 3.704e+10 on 43 and 88 DF,  p-value: < 0.00000000000000022
 lr_step_aic_split = step(lr_splitModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic_split) # Multiple R-squared: 1; Adjusted R-squared: 1; F: 7.939e+10 on 21 and 110 DF,  p-value: < 0.00000000000000022
 
+# TODO: Fit a tslm model using the selected variables
 
 #assess multicollinearity through VIF
 vif(lr_step_aic)
@@ -756,7 +763,10 @@ accuracies= bind_rows(accuracies, knn_acc)
 # we can use splines and local regression as building blocks for fitting an additive model
 # we calculate a separate fj for each Xj and then add together all of their contributions.
 
+# First pull our baseline linear regression model
 library(gam)
+
+g1 <- 
 ##################################
 
 
@@ -765,19 +775,19 @@ library(gam)
 
 
 ################## GRADIENT BOOSTING
-
-library(xgboost)
-library(gbm)
-
-train_gbm = train_data_full[, !names(train_data_full) %in% "DATE", drop = FALSE] #it gave errors with the DATE variable.
-
-model_gbm = gbm(Sales_residential ~.,
-                data = train_gbm,
-                distribution = "gaussian",
-                cv.folds = 5,
-                shrinkage = .001,
-                n.minobsinnode = 10,
-                n.trees = 20000)
+# 
+# library(xgboost)
+# library(gbm)
+# 
+# train_gbm = train_data_full[, !names(train_data_full) %in% "DATE", drop = FALSE] #it gave errors with the DATE variable.
+# 
+# model_gbm = gbm(Sales_residential ~.,
+#                 data = train_gbm,
+#                 distribution = "gaussian",
+#                 cv.folds = 5,
+#                 shrinkage = .001,
+#                 n.minobsinnode = 10,
+#                 n.trees = 20000)
 #i've tried several parameters and those seems the best.
 
 ############# ACCURACIES
