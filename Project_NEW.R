@@ -750,6 +750,14 @@ knn_acc = knn_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE
 
 accuracies= bind_rows(accuracies, knn_acc)
 
+# TODO: Generalized Additive Model (GAM)
+# From slides: GAMs extend a standard linear model by allowing non-linear functions of each of 
+# the variables, while maintaining additivity.
+# we can use splines and local regression as building blocks for fitting an additive model
+# we calculate a separate fj for each Xj and then add together all of their contributions.
+
+library(gam)
+
 
 
 ##################################### CHOOSING THE BEST MODEL ###############################
