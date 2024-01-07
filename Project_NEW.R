@@ -277,14 +277,16 @@ sales_fc |>
 # BEST MODEL: Seasonal NAIVE
 # ACCURACIES
 accuracies <-accuracy(sales_fc, test_data)
-accuracies  # The measures calculated are:
-            # ME: Mean Error
-            # RMSE: Root Mean Squared Error
-            # MAE: Mean Absolute Error
-            # MPE: Mean Percentage Error
-            # MAPE: Mean Absolute Percentage Error
-            # MASE: Mean Absolute Scaled Error
-            # ACF1: Autocorrelation of errors at lag 1.
+accuracies  
+
+# The measures calculated are:
+# ME: Mean Error
+# RMSE: Root Mean Squared Error
+# MAE: Mean Absolute Error
+# MPE: Mean Percentage Error
+# MAPE: Mean Absolute Percentage Error
+# MASE: Mean Absolute Scaled Error
+# ACF1: Autocorrelation of errors at lag 1.
 
 
 ################# RESIDUALS ANALYSIS
@@ -336,8 +338,6 @@ summary(tslm_trend_season) # R-squared = 0.7941; F = 80.65 with 251 df; p < 0.00
 ######### 3. Trend + Season on subset
 m1 <- tslm(ressales_ts_10 ~ trend + season)
 summary(m1) # R-squared = 0.7637; F = 35.55 with ; p<0.0001
-
-
 
 ########## PLOTTING AND RESIDUALS ANALYSIS
 ## PLOT VALUES vs FITTED
