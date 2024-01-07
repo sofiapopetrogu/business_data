@@ -161,12 +161,23 @@ ressales_ts_arima_train = ts(train_data_full$Sales_residential, frequency = 12)
 
 
 # numerical data after 2012
-numerical_data_split <- data[data$DATE >= as.Date("2012-01-01"), ]%>%
-  select_if(is.numeric)
+numerical_data_split_train <- data_tsbl[data_tsbl$DATE >= as.Date("2012-01-01"), ]%>%
+  data_tsbl[data_tsbl$DATE < as.Date("2022-01-01"), ] |>
+  select_if(is.numeric) |>
+  ts(data_tsbl$Sales_residential)
+
+numerical_data_split_test <- data_tsbl[data_tsbl$DATE >= as.Date("2022-01-01"), ]%>%
+  select_if(is.numeric) |>
+  ts(data_tsbl$Sales_residential)
 
 # full dataset
-numerical_data <- data %>%
-  select_if(is.numeric)
+numerical_data_train <- data_tsbl[data_tsbl$DATE < as.Date("2022-01-01"), ] |>
+  select_if(is.numeric) |>
+  ts(data_tsbl$Sales_residential)
+
+numerical_data_test <- data_tsbl[data_tsbl$DATE >= as.Date("2022-01-01"), ] |>
+  select_if(is.numeric) |>
+  ts(data_tsbl$Sales_residential)
 
 ############################### Pre-Modeling ##################################
 p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
@@ -459,7 +470,7 @@ accuracies
 # Most important thing: select which predictor we'll use
 # stepwise selection
 ################### FULL DATASET (FROM 2001 TO 2022)
-lr_fullModel = lm(Sales_residential ~ ., data=numerical_data)
+lr_fullModel = tslm(Sales_residential ~ ., data=numerical_data_train)
 summary(lr_fullModel) # Multiple R-squared:  0.9906;	Adjusted R-squared:  0.9893 F = 760.2 on 32 and 231 DF;  p-value: < 0.0000000022
 lr_step_aic = step(lr_fullModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic) # Multiple R-squared:  0.9904;	Adjusted R-squared:  0.9897; F:  1259 on 20 and 243 DF;  p-value: < 0.0000000022
@@ -467,7 +478,7 @@ summary(lr_step_aic) # Multiple R-squared:  0.9904;	Adjusted R-squared:  0.9897;
 ################### PARTIAL DATASET (FROM 2012 TO 2022)
 
 # Note: stepwise function getting warnings since fit is already 1
-lr_splitModel = lm(Sales_residential ~ ., data=numerical_data_split)
+lr_splitModel = tslm(Sales_residential ~ ., data=numerical_data_split_train)
 summary(lr_splitModel) # Multiple R-squared: 1; Adjusted R-squared 1; F: 3.704e+10 on 43 and 88 DF,  p-value: < 0.00000000000000022
 lr_step_aic_split = step(lr_splitModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic_split) # Multiple R-squared: 1; Adjusted R-squared: 1; F: 7.939e+10 on 21 and 110 DF,  p-value: < 0.00000000000000022
@@ -486,6 +497,7 @@ extractAIC(mlr)
 acf(residuals(mlr))
 
 
+
 #reduce collinearity SPLIT
 mlr_split = reduce_multicollinearity(lr_step_aic_split)
 vif(mlr_split)
@@ -497,9 +509,10 @@ acf(residuals(mlr_split)) # more negative autocorrelation between lag 15 and 20.
 
 # IN GENERAL FULL MODEL IS BETTER.
 
-predict_mlr = predict(mlr, newdata = test_data)
-predict_mlr_split = predict(mlr_split, newdata = test_data)
+predict_mlr = predict(mlr, newdata = numerical_data_test)
+predict_mlr_split = predict(mlr_split, newdata = numerical_data_split_test)
 
+# probably waste code but it works for the plot so leave it.
 test_data_mlr = test_data
 test_data_mlr$DATE = as.Date(test_data$DATE)
 
@@ -508,8 +521,6 @@ plot(test_data_mlr$DATE, test_data$Sales_residential, type = "l", col = "black",
      xlab = "Month", ylab = "Response Variable", main = "MLR Predictions vs Actual",  xaxt = "n")+
   axis(side = 1, at = test_data_mlr$DATE, labels = 1:12)+
   lines(test_data_mlr$DATE, predict_mlr, col = "#ffa8a8", lwd = 2)
-
-
 
 legend("topleft", legend = c("Actual", "MLR Predictions"), col = c("black", "red"), lwd = 2)
 
