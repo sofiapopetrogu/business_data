@@ -412,6 +412,43 @@ plot(forecast(m1))
 plot(forecast(tslm_trend_season))
 plot(forecast(tslm_trend))
 
+###### ACCURACIES
+
+m1_acc = as_tibble(accuracy(forecast(m1, h=12), test_data$Sales_residential))
+tslm_trend_acc = as_tibble(accuracy(forecast(tslm_trend, h=12), test_data$Sales_residential))
+tslm_trend_season_acc = as_tibble(accuracy(forecast(tslm_trend_season, h=12), test_data$Sales_residential))
+
+m1_acc = m1_acc[2,]
+m1_acc$.model = 'tslm subset'
+m1_acc$.type = 'Test'
+m1_acc$MASE= NA
+m1_acc$RMSSE = NA
+m1_acc$ACF1 = NA
+m1_acc = m1_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+tslm_trend_acc = tslm_trend_acc[2,]
+tslm_trend_acc$.model = 'tslm trend'
+tslm_trend_acc$.type = 'Test'
+tslm_trend_acc$MASE= NA
+tslm_trend_acc$RMSSE = NA
+tslm_trend_acc$ACF1 = NA
+tslm_trend_acc = tslm_trend_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+tslm_trend_season_acc = tslm_trend_season_acc[2,]
+tslm_trend_season_acc$.model = 'tslm trend + season'
+tslm_trend_season_acc$.type = 'Test'
+tslm_trend_season_acc$MASE= NA
+tslm_trend_season_acc$RMSSE = NA
+tslm_trend_season_acc$ACF1 = NA
+tslm_trend_season_acc = tslm_trend_season_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+accuracies = bind_rows(accuracies, m1_acc)
+accuracies = bind_rows(accuracies, tslm_trend_acc)
+accuracies = bind_rows(accuracies, tslm_trend_season_acc)
+
+accuracies[accuracies$.model == 'tslm subset', 'ACF1'] = ACF1(residuals(m1))
+accuracies[accuracies$.model == 'tslm trend', 'ACF1'] = ACF1(residuals(tslm_trend))
+accuracies[accuracies$.model == 'tslm trend + season', 'ACF1'] = ACF1(residuals(tslm_trend_season))
 
 
 #################################################### MULTIPLE LINEAR REGRESSION MODELS
