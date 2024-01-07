@@ -467,7 +467,6 @@ lr_step_aic_split = step(lr_splitModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic_split) # Multiple R-squared: 1; Adjusted R-squared: 1; F: 7.939e+10 on 21 and 110 DF,  p-value: < 0.00000000000000022
 
 
-
 #assess multicollinearity through VIF
 vif(lr_step_aic)
 vif(lr_step_aic_split)  # curious to see the different VIF between the two models. In general the second has higher VIF.
@@ -479,6 +478,7 @@ summary(mlr) # Multiple R-squared:  0.9606;	Adjusted R-squared:  0.9586; F:   46
 extractAIC(mlr)
 # check autocorrelations in residuals
 acf(residuals(mlr))
+
 
 #reduce collinearity SPLIT
 mlr_split = reduce_multicollinearity(lr_step_aic_split)
@@ -757,7 +757,54 @@ accuracies= bind_rows(accuracies, knn_acc)
 # we calculate a separate fj for each Xj and then add together all of their contributions.
 
 library(gam)
+##################################
 
+
+
+
+
+
+################## GRADIENT BOOSTING
+
+library(xgboost)
+library(gbm)
+
+train_gbm = train_data_full[, !names(train_data_full) %in% "DATE", drop = FALSE] #it gave errors with the DATE variable.
+
+model_gbm = gbm(Sales_residential ~.,
+                data = train_gbm,
+                distribution = "gaussian",
+                cv.folds = 5,
+                shrinkage = .001,
+                n.minobsinnode = 10,
+                n.trees = 20000)
+#i've tried several parameters and those seems the best.
+
+############# ACCURACIES
+
+accuracy(model_gbm$fit, train_data_full$Sales_residential) # on train
+pred_y = predict.gbm(model_gbm, test_data) 
+accuracy_gb = accuracy(pred_y, test_data$Sales_residential) # on test, no overfitting and good results
+
+
+accuracy_gb = as_tibble(accuracy_gb)
+accuracy_gb$.model = 'Gradient Boosting'
+accuracy_gb$.type = 'Test'
+accuracy_gb$RMSSE =NA
+accuracy_gb$ACF1 = NA
+accuracy_gb$MASE = NA
+accuracy_gb = accuracy_gb[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+accuracies= bind_rows(accuracies, accuracy_gb)
+
+# PLOTTING 
+x_ax = 1:length(pred_y)
+plot(x_ax, test_data$Sales_residential, col="blue", pch=20, cex=.9)
+lines(x_ax, pred_y, col="red", pch=20, cex=.9)
+
+x_ax_train = 1:length(train_data_full$Sales_residential)
+plot(x_ax_train, train_data_full$Sales_residential, col="red", pch=20, cex=.9)
+lines(x_ax_train, model_gbm$fit, col="black", pch=20, cex=.9)
 
 
 ##################################### CHOOSING THE BEST MODEL ###############################
