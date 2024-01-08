@@ -582,6 +582,7 @@ hw_fit_full <- train_data_full |>
                                 season("M"))
   )
 
+
 # TRAIN split
 hw_fit_split <- train_data_split |>
   model(
@@ -830,7 +831,7 @@ plot(g5, se=T)
 
 # if we want to see better some plots
 par(mfrow=c(1,1))
-plot(g5, se=T, ask=T)
+#plot(g5, se=T, ask=t)
 
 #Prediction
 p.gam <- predict(g5,newdata=test_data)  
@@ -886,6 +887,8 @@ model_gbm = gbm(Sales_residential ~.,
                 shrinkage = .001,
                 n.minobsinnode = 10,
                 n.trees = 20000)
+
+
 #i've tried several parameters and those seems the best.
 
 ############# ACCURACIES

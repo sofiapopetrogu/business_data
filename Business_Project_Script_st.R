@@ -1687,3 +1687,24 @@ m1_acc = as_tibble(accuracy(forecast(m1, h=12), test_data$Sales_residential))
 
 m1_acc
 
+######### HW Testing
+
+hw1<- hw(ressales_ts, seasonal="additive")
+hw2<- hw(ressales_ts, seasonal="multiplicative")
+
+autoplot(ressales_ts)+
+  autolayer(hw1, series="Holt-Winters' method", PI=F)
+
+summary(hw1) # AIC: 6798.033
+summary(hw2) # AIC: 6795.085
+
+# post 2012
+ressales_ts_2012 <- window(ressales_ts, start = 12)
+
+hw3<- hw(ressales_ts_2012, seasonal="additive")
+hw4<- hw(ressales_ts_2012, seasonal="multiplicative")
+
+autoplot(ressales_ts_2012)+
+  autolayer(hw3, series="Holt-Winters' method", PI=F)
+
+summary(hw3) # AIC: 3339.665
