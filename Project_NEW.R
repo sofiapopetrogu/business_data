@@ -158,14 +158,8 @@ train_data_split <- data_tsbl |> # so that we don't take petroleum
   filter(DATE < yearmonth("2022-01")) |>
   filter(DATE > yearmonth("2012-01"))
 
-# representing our data as a time series for regression
-ressales_ts_train <- ts(train_data_full$Sales_residential, frequency = 12)
 
-
-# take a portion of data and fit a linear model with tslm; 2010 onward
-ressales_ts_10 <- window(ressales_ts, start = 10)
-
-# 2001-2021
+# For arima
 ressales_ts_arima_train = ts(train_data_full$Sales_residential, frequency = 12)
 
 
@@ -294,7 +288,7 @@ sales_fc |>
 
 # BEST MODEL: Seasonal NAIVE
 # ACCURACIES
-accuracies <-accuracy(sales_fc, test_data)
+accuracies <- accuracy(sales_fc, test_data)
 
 
 
@@ -347,16 +341,12 @@ acf(na.omit(residuals_drift$.resid), main= 'ACF for Drift')
 
 ################################################## LINEAR REGRESSION
 ######### 1. Trend
-tslm_trend = tslm(ressales_ts ~ trend)
-summary(tslm_trend) # R-squared = 0.2221; F = 74.79 with 262 df; p < 0.0001
+tslm_trend = tslm(ts(train_data_full$Sales_residential, frequency=12) ~ trend)
+summary(tslm_trend) # R-squared = 0.2133, F = 67.77 with 250 df; p < 0.0001
 
 ######### 2. Trend + Season
-tslm_trend_season = tslm(ressales_ts ~ trend + season)
-summary(tslm_trend_season) # R-squared = 0.7941; F = 80.65 with 251 df; p < 0.0001
-
-######### 3. Trend + Season on subset
-m1 <- tslm(ressales_ts_10 ~ trend + season)
-summary(m1) # R-squared = 0.769; F = 39.66 with ; p< 0.00000000000000022
+tslm_trend_season = tslm(ts(train_data_full$Sales_residential, frequency=12) ~ trend + season)
+summary(tslm_trend_season) # R-squared = 0.7858; F = 73.06 with 239 df; p < 0.0001
 
 ########## PLOTTING AND RESIDUALS ANALYSIS
 ## PLOT VALUES vs FITTED
@@ -406,44 +396,26 @@ p_tslm_ts_res_hist <- ggplot(data, aes(x = residuals(tslm_trend_season))) +
   custom_theme()
 print(p_tslm_ts_res_hist)
 
-p_tslm_ts_10_res_hist <- ggplot(ressales_ts_10, aes(x = residuals(m1))) +
-  geom_histogram(bins = 30, fill = "lightblue", color = "black") +
-  labs(x = "Value", y = "Frequency", title = "Histogram of residuals with Trend and Season on subset")+
-  custom_theme()
-print(p_tslm_ts_10_res_hist)
-
 ## DW TEST (to detect autocorrelations) dw=2 desired, dw<2 positive autocorrelation.
 dwtest(tslm_trend) # DW = 1.199, p<0.0001
 dwtest(tslm_trend_season) # DW = 1.7889, p-value < 0.05
-dwtest(m1) # DW = 1.8362, p-value = 0.1595
 
 
 ###### Autocorrelations
 acf(residuals(tslm_trend))
 acf(residuals(tslm_trend_season))
-acf(residuals(m1))
 
 
 ###### FORECAST
 # grey area 80%
 # light shaded area 95%
-plot(forecast(m1))
 plot(forecast(tslm_trend_season))
 plot(forecast(tslm_trend))
 
 ###### ACCURACIES
 
-m1_acc = as_tibble(accuracy(forecast(m1, h=12), test_data$Sales_residential))
 tslm_trend_acc = as_tibble(accuracy(forecast(tslm_trend, h=12), test_data$Sales_residential))
 tslm_trend_season_acc = as_tibble(accuracy(forecast(tslm_trend_season, h=12), test_data$Sales_residential))
-
-m1_acc = m1_acc[2,]
-m1_acc$.model = 'tslm subset'
-m1_acc$.type = 'Test'
-m1_acc$MASE= NA
-m1_acc$RMSSE = NA
-m1_acc$ACF1 = NA
-m1_acc = m1_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
 
 tslm_trend_acc = tslm_trend_acc[2,]
 tslm_trend_acc$.model = 'tslm trend'
@@ -461,11 +433,9 @@ tslm_trend_season_acc$RMSSE = NA
 tslm_trend_season_acc$ACF1 = NA
 tslm_trend_season_acc = tslm_trend_season_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
 
-accuracies = bind_rows(accuracies, m1_acc)
 accuracies = bind_rows(accuracies, tslm_trend_acc)
 accuracies = bind_rows(accuracies, tslm_trend_season_acc)
 
-accuracies[accuracies$.model == 'tslm subset', 'ACF1'] = ACF1(residuals(m1))
 accuracies[accuracies$.model == 'tslm trend', 'ACF1'] = ACF1(residuals(tslm_trend))
 accuracies[accuracies$.model == 'tslm trend + season', 'ACF1'] = ACF1(residuals(tslm_trend_season))
 
