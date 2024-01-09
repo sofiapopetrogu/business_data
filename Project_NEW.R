@@ -350,7 +350,7 @@ summary(tslm_trend_season) # R-squared = 0.7858; F = 73.06 with 239 df; p < 0.00
 
 ########## PLOTTING AND RESIDUALS ANALYSIS
 ## PLOT VALUES vs FITTED
-p_tslm_t <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
+p_tslm_t <- ggplot(train_data_full, aes(x = DATE, y = Sales_residential)) +
   geom_line() +
   labs(x = "Time", y = "Residential Sales (MWh)", title = "Real TimeSeries vs Fitted Values TSLM") +
   scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
@@ -734,24 +734,24 @@ library(gam)
 
 # First pull our baseline linear regression model
 
-tt <- 1:length(ressales_ts)
-seas <- factor(rep(1:12, length.out = length(ressales_ts)))
+tt <- 1:length(train_data_full$Sales_residential)
+seas <- factor(rep(1:12, length.out = length(train_data_full$Sales_residential)))
 
 
 
-g1 <- lm(ressales_ts~ tt+seas) # baseline linear regression model
+g1 <- lm(train_data_full$Sales_residential ~ tt+seas) # baseline linear regression model
 summary(g1) # Multiple R-squared:  0.7941,	Adjusted R-squared:  0.7842 F-statistic: 80.65 on 12 and 251 DF,  p-value: < 0.00000000000000022
 AIC(g1) # 6062.793
 
 # add smoothing spline for trend
-g2 <- gam(ressales_ts~ s(tt)+seas)
+g2 <- gam(train_data_full$Sales_residential ~ s(tt)+seas)
 summary(g2) # have ANOVA for parametric and non-parametric effects: both effects are significant
 # time has a non-linear effect
 plot(g2, se=T) # diagnostic plot called "Partial Residuals vs. Fitted Values."
 AIC(g2) # 6054.869
 
 ####try another option with loess (lo)
-g3<- gam(ressales_ts~lo(tt)+seas)
+g3<- gam(train_data_full$Sales_residential ~ lo(tt)+seas)
 summary(g3) # simmilar results to g2
 plot(g3, se=T)
 AIC(g3) # 6054.832
