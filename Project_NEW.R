@@ -61,14 +61,14 @@ reduce_multicollinearity <- function(model) {
   while(TRUE) {
     # Get the predictors that are part of the model
     predictors <- names(coef(model))[-1]
-    
+
     # Calculate VIF for each variable in the model
     vif_values <- vif(model)
     # Check if the maximum VIF is greater than the threshold (20)
     if(max(vif_values) < 10) {
       break
     }
-    
+
     # Identify the variable with the highest VIF
     max_vif_var <- names(which.max(vif_values))
     # Get rid of that variable
@@ -78,9 +78,9 @@ reduce_multicollinearity <- function(model) {
     # Convert the string to a formula
     formula_object <- as.formula(formula_string)
     # Fit the model using the formula
-    model <- lm(formula_object, data=numerical_data, family = gaussian)
+    model <- lm(formula_object, data=numerical_data_train, family = gaussian)
   }
-  
+
   return(model)
 }
 
@@ -90,13 +90,13 @@ find_correlations <- function(data, threshold = 0.1) {
   if (!is.data.frame(data)) {
     stop("Input must be a dataframe.")
   }
-  
+
   # Select only numeric columns
   numeric_data <- data[sapply(data, is.numeric)]
-  
+
   # Calculate the correlation matrix
   cor_matrix <- cor(numeric_data, use = "complete.obs") # Handling missing values
-  
+
   # Initialize an empty dataframe to store high correlations
   high_corr_df <- data.frame(
     Column1 = character(),
@@ -104,7 +104,7 @@ find_correlations <- function(data, threshold = 0.1) {
     Correlation = numeric(),
     stringsAsFactors = FALSE
   )
-  
+
   # Iterate over the correlation matrix
   for (i in 1:ncol(cor_matrix)) {
     for (j in 1:ncol(cor_matrix)) {
@@ -119,7 +119,7 @@ find_correlations <- function(data, threshold = 0.1) {
       }
     }
   }
-  
+
   return(high_corr_df)
 }
 
@@ -149,7 +149,7 @@ data_tsbl$DATE = yearmonth(data_tsbl$DATE)
 data_tsbl <- as_tsibble(data_tsbl, index = DATE)
 
 train_data_full <- data_tsbl |>
-  filter(DATE < yearmonth("2022-01")) 
+  filter(DATE < yearmonth("2022-01"))
 
 test_data <- data_tsbl |>
   filter(DATE >= yearmonth("2022-01"))
@@ -159,14 +159,14 @@ train_data_split <- data_tsbl |> # so that we don't take petroleum
   filter(DATE > yearmonth("2012-01"))
 
 # representing our data as a time series for regression
-ressales_ts <- ts(data$Sales_residential, frequency = 12)
+ressales_ts_train <- ts(train_data_full$Sales_residential, frequency = 12)
 
 
 # take a portion of data and fit a linear model with tslm; 2010 onward
 ressales_ts_10 <- window(ressales_ts, start = 10)
 
 # 2001-2021
-ressales_ts_arima_train = ts(train_data_full$Sales_residential, frequency = 12) 
+ressales_ts_arima_train = ts(train_data_full$Sales_residential, frequency = 12)
 
 
 
@@ -295,10 +295,8 @@ sales_fc |>
 # BEST MODEL: Seasonal NAIVE
 # ACCURACIES
 accuracies <-accuracy(sales_fc, test_data)
-accuracies
 
-# Nice table for report
-print_nice(accuracies)
+
 
 # The measures calculated are:
 # ME: Mean Error
@@ -429,7 +427,7 @@ acf(residuals(m1))
 ###### FORECAST
 # grey area 80%
 # light shaded area 95%
-plot(forecast(m1)) 
+plot(forecast(m1))
 plot(forecast(tslm_trend_season))
 plot(forecast(tslm_trend))
 
@@ -472,7 +470,7 @@ accuracies[accuracies$.model == 'tslm trend', 'ACF1'] = ACF1(residuals(tslm_tren
 accuracies[accuracies$.model == 'tslm trend + season', 'ACF1'] = ACF1(residuals(tslm_trend_season))
 
 # seasonal Naive still appears to be outperforming in performance metrics
-accuracies
+
 
 #################################################### MULTIPLE LINEAR REGRESSION MODELS
 # Most important thing: select which predictor we'll use
@@ -518,8 +516,8 @@ acf(residuals(mlr_split)) # more negative autocorrelation between lag 15 and 20.
 
 # IN GENERAL FULL MODEL IS BETTER.
 
-predict_mlr = predict(mlr, newdata = numerical_data_test)
-predict_mlr_split = predict(mlr_split, newdata = numerical_data_split_test)
+predict_mlr = predict(mlr, newdata = numerical_test)
+predict_mlr_split = predict(mlr_split, newdata = numerical_test)
 
 # probably waste code but it works for the plot so leave it.
 test_data_mlr = test_data
@@ -578,64 +576,47 @@ accuracies = bind_rows(accuracies, accuracy_mlr_split)
 # We want a method that takes into account seasonality as we have seen
 # Holt Winters seasonal method
 
-## TRAIN full
-hw_fit_full <- train_data_full |>
-  model(
-    # a) Additive is preferred when seasonal variations are roughly constant
-    # through the series
-    'hw_additive' = ETS(Sales_residential ~ error("A") + trend("A") +
-                          season("A")),
-    # b) Multiplicative is preferred when the seasonal variations are changing
-    # proportional to the level of the series
-    'hw_multiplicative' = ETS(Sales_residential ~ error("M") + trend("A") +
-                                season("M"))
-  )
+
+hw1<- hw(ressales_ts_train, seasonal="additive")
+hw2<- hw(ressales_ts_train, seasonal="multiplicative")
+
+autoplot(ressales_ts)+
+  autolayer(hw1, series="Holt-Winters' method", PI=F)
+
+summary(hw1) # AIC: 6488.702
+summary(hw2) # AIC: 6482.330
 
 
-# TRAIN split
-hw_fit_split <- train_data_split |>
-  model(
-    # a) Additive is preferred when seasonal variations are roughly constant
-    # through the series
-    'hw_additive_split' = ETS(Sales_residential ~ error("A") + trend("A") +
-                          season("A")),
-    # b) Multiplicative is preferred when the seasonal variations are changing
-    # proportional to the level of the series
-    'hw_multiplicative_split' = ETS(Sales_residential ~ error("M") + trend("A") +
-                                season("M"))
-  )
-
-
-## FORECAST full
-hw_fc_full <- hw_fit_full |>
-  forecast(h= '1 year')
-
-## FORECAST split
-hw_fc_split <- hw_fit_split |>
-  forecast(h= '1 year')
-
-
-# Plot forecast full
-hw_fc_full |>
-  autoplot(test_data, level = NULL) +
-  labs(title="Date",
-       y="Residential sales MWh") +
-  guides(colour = guide_legend(title = "Forecast"))+
-  custom_theme()
-
-# Plot forecast split
-hw_fc_split |>
-  autoplot(test_data, level = NULL) +
-  labs(title="Date",
-       y="Residential sales MWh") +
-  guides(colour = guide_legend(title = "Forecast"))+
-  custom_theme()
+forecast_hw = forecast(hw1, new_data = ts(test_data$Sales_residential))
+forecast_hw2 = forecast(hw2, new_data = ts(test_data$Sales_residential))
 
 # Compute accuracies
-hw_acc_full <- accuracy(hw_fc_full, test_data) # we could use (complete) data_tsbl and it would detect
-hw_acc_split <- accuracy(hw_fc_split, test_data) # we could use (complete) data_tsbl and it would detect
-accuracies = bind_rows(accuracies, hw_acc_full)
-accuracies = bind_rows(accuracies, hw_acc_split)
+hw1_acc <- accuracy(forecast_hw, test_data$Sales_residential)
+hw2_acc <- accuracy(forecast_hw2, test_data$Sales_residential)
+
+
+hw1_acc=accuracy(forecast_hw, test_data$Sales_residential)
+hw1_acc = as_tibble_row(hw1_acc[2,])
+hw1_acc$.model = 'HW additive'
+hw1_acc$.type = 'Test'
+hw1_acc$RMSSE = NA
+hw1_acc$ACF1 = ACF1(residuals(hw1))
+hw1_acc = hw1_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+
+hw2_acc=accuracy(forecast_hw, test_data$Sales_residential)
+hw2_acc = as_tibble_row(hw2_acc[2,])
+hw2_acc$.model = 'HW multiplicative'
+hw2_acc$.type = 'Test'
+hw2_acc$RMSSE = NA
+hw2_acc$ACF1 = ACF1(residuals(hw2))
+hw2_acc = hw2_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+
+
+
+accuracies = bind_rows(accuracies, hw1_acc[2,])
+accuracies = bind_rows(accuracies, hw2_acc[2,])
 
 
 ###################################### ARIMA Models
@@ -670,12 +651,12 @@ grid.arrange(p_acf_df, p_pacf_df, nrow = 2)
 
 
 # using auto.arima automatically it finds the best parameters.
-arima_model = auto.arima(train_data_full$Sales_residential, 
-                         lambda = "auto", 
+arima_model = auto.arima(train_data_full$Sales_residential,
+                         lambda = "auto",
                          stepwise = FALSE,
                          seasonal = TRUE,
                          trace = TRUE,
-                         approximation = FALSE, 
+                         approximation = FALSE,
                          allowdrift = TRUE)
 summary(arima_model) # AIC=378.89. ARIMA(5,1,0)
 
@@ -756,8 +737,8 @@ autoplot(pred, highlight = "neighbors", faceting = FALSE)+
   custom_theme()
 
 
-# The prediction is the average of the target vectors of the two nearest neighbors. 
-#  As can be observed, we have chosen to see all the nearest neighbors in the same plot. 
+# The prediction is the average of the target vectors of the two nearest neighbors.
+#  As can be observed, we have chosen to see all the nearest neighbors in the same plot.
 # Because we are working with a monthly time series, we have thought that lags 1-12 are a suitable choice for selecting the features of the examples.
 
 ro <- rolling_origin(pred, h = 12, rolling=FALSE)
@@ -778,13 +759,15 @@ knn_acc = knn_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE
 accuracies= bind_rows(accuracies, knn_acc)
 
 ################################## Generalized Additive Model (GAM)
+library(gam)
+
 
 # First pull our baseline linear regression model
 
 tt <- 1:length(ressales_ts)
 seas <- factor(rep(1:12, length.out = length(ressales_ts)))
 
-library(gam)
+
 
 g1 <- lm(ressales_ts~ tt+seas) # baseline linear regression model
 summary(g1) # Multiple R-squared:  0.7941,	Adjusted R-squared:  0.7842 F-statistic: 80.65 on 12 and 251 DF,  p-value: < 0.00000000000000022
@@ -818,10 +801,10 @@ numeric_train_data <- train_data_full |>
 # removed ind and transportation customers since they had less than 3 unique values
 g4 <- gam(Sales_residential~.-Customers_industrial-Customers_transportation-DATE, data=numeric_train_data)
 
-#Show the linear effects 
+#Show the linear effects
 par(mfrow=c(3,5))
-plot(g4, se=T) 
-summary(g4) 
+plot(g4, se=T)
+summary(g4)
 
 #Perform stepwise selection procedure using gam scope
 #Values for df should be greater than 1, with df=1 implying a linear fit
@@ -843,7 +826,7 @@ par(mfrow=c(1,1))
 #plot(g5, se=T, ask=t)
 
 #Prediction
-p.gam <- predict(g5,newdata=test_data)  
+p.gam <- predict(g5,newdata=test_data)
 gam_accuracy <- accuracy(p.gam, test_data$Sales_residential)
 
 # TRY ON SPLIT DATASET
@@ -853,11 +836,11 @@ numeric_train_split_data <- train_data_split |>
 g4_split <- gam(Sales_residential~.-Customers_industrial-Customers_transportation-DATE-Electric.Generators..Electric.Utilities , data=numeric_train_split_data)
 
 par(mfrow=c(3,5))
-plot(g4_split, se=T) 
-summary(g4_split) 
+plot(g4_split, se=T)
+summary(g4_split)
 
 sc_split = gam.scope(numeric_train_split_data[,c(-11,-38)], response=11, arg=c("df=2","df=3","df=4"))
-g5_split<- step.Gam(g4_split, scope=sc_split, trace=T) 
+g5_split<- step.Gam(g4_split, scope=sc_split, trace=T)
 
 summary(g5_split) # not significant for non-parametric
 # Warning message:
@@ -872,9 +855,36 @@ AIC(g4) #5045.061
 AIC(g5) #4716.624
 
 #Prediction
-p.gam.split <- predict(g5_split,newdata=test_data)  
+p.gam.split <- predict(g5_split,newdata=test_data)
 gam_split_accuracy <- accuracy(p.gam.split, test_data$Sales_residential)
 
+
+
+
+
+
+
+accuracy_gam = accuracy(p.gam, test_data$Sales_residential)
+accuracy_gam = as_tibble(accuracy_gam)
+accuracy_gam$.model = 'GAM complete'
+accuracy_gam$.type = 'Test'
+accuracy_gam$RMSSE =NA
+accuracy_gam$ACF1 = NA
+accuracy_gam$MASE = NA
+accuracy_gam = accuracy_gam[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+accuracy_gam_split = accuracy(p.gam.split, test_data$Sales_residential)
+accuracy_gam_split = as_tibble(accuracy_gam_split)
+accuracy_gam_split$.model = 'GAM splitted'
+accuracy_gam_split$.type = 'Test'
+accuracy_gam_split$RMSSE =NA
+accuracy_gam_split$ACF1 = NA
+accuracy_gam_split$MASE = NA
+accuracy_gam_split = accuracy_gam_split[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
+
+accuracies = bind_rows(accuracies, accuracy_gam)
+accuracies = bind_rows(accuracies, accuracy_gam_split)
 ##################################
 
 
@@ -903,7 +913,7 @@ model_gbm = gbm(Sales_residential ~.,
 ############# ACCURACIES
 
 accuracy(model_gbm$fit, train_data_full$Sales_residential) # on train
-pred_y = predict.gbm(model_gbm, test_data) 
+pred_y = predict.gbm(model_gbm, test_data)
 accuracy_gb = accuracy(pred_y, test_data$Sales_residential) # on test, no overfitting and good results
 
 
@@ -917,7 +927,7 @@ accuracy_gb = accuracy_gb[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE
 
 accuracies= bind_rows(accuracies, accuracy_gb)
 
-# PLOTTING 
+# PLOTTING
 x_ax = 1:length(pred_y)
 plot(x_ax, test_data$Sales_residential, col="blue", pch=20, cex=.9)
 lines(x_ax, pred_y, col="red", pch=20, cex=.9)
@@ -934,7 +944,7 @@ lines(x_ax_train, model_gbm$fit, col="black", pch=20, cex=.9)
 
 
 # let's consider RMSE as our main measure and print it ordered by it.
-accuracies |> 
+final_acc = accuracies |>
   select(-MASE, -RMSSE)|>
   arrange(RMSE) # simple models + Multiple linear regression + exp smoothing + ARIMA + KNN
 
@@ -949,7 +959,8 @@ extractAIC(mlr_split)
 # I would say best model is among HW_ADDITIVE (SPLIT VERSION)
 
 # AIC is useless for HW models because is non-parametric.
-
+# Nice table for report
+print_nice(final_acc)
 
 
 
