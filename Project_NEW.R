@@ -40,6 +40,9 @@ library(tsfknn)
 # Miscellaneous
 library(readxl)
 library(reshape2)
+# To create nice tables
+library(flextable)
+
 
 ############################ Custom functions ##########################
 custom_theme <- function() {
@@ -120,6 +123,13 @@ find_correlations <- function(data, threshold = 0.1) {
   return(high_corr_df)
 }
 
+# Print nice table for report (from accuracies tibble)
+print_nice <- function(accs){
+  accs |>
+    select(.model, ME, RMSE, MAE, MPE, MAPE, ACF1)   |> # select columns
+    flextable()  |>
+    colformat_double(big.mark = ",", digits = 2, na_str = "N/A")
+}
 
 
 ############################# Data Preparation ############################
@@ -144,7 +154,7 @@ train_data_full <- data_tsbl |>
 test_data <- data_tsbl |>
   filter(DATE >= yearmonth("2022-01"))
 
-train_data_split <- data_tsbl |>
+train_data_split <- data_tsbl |> # so that we don't take petroleum
   filter(DATE < yearmonth("2022-01")) |>
   filter(DATE > yearmonth("2012-01"))
 
@@ -161,12 +171,12 @@ ressales_ts_arima_train = ts(train_data_full$Sales_residential, frequency = 12)
 
 
 # numerical data after 2012
-numerical_data_split_train <- data_tsbl[data_tsbl$DATE >= as.Date("2012-01-01"), ]%>%
+numerical_data_split_train <- data_tsbl[data_tsbl$DATE >= as.Date("2012-01-01"), ]|>
   data_tsbl[data_tsbl$DATE < as.Date("2022-01-01"), ] |>
   select_if(is.numeric) |>
   ts(data_tsbl$Sales_residential)
 
-numerical_data_split_test <- data_tsbl[data_tsbl$DATE >= as.Date("2022-01-01"), ]%>%
+numerical_data_split_test <- data_tsbl[data_tsbl$DATE >= as.Date("2022-01-01"), ]|>
   select_if(is.numeric) |>
   ts(data_tsbl$Sales_residential)
 
@@ -290,7 +300,10 @@ sales_fc |>
 # BEST MODEL: Seasonal NAIVE
 # ACCURACIES
 accuracies <-accuracy(sales_fc, test_data)
-accuracies  
+accuracies
+
+# Nice table for report
+print_nice(accuracies)
 
 # The measures calculated are:
 # ME: Mean Error
@@ -802,7 +815,7 @@ lines(fitted(g3), col ="red") # fit according to GAM (g1)
 
 # Next, try more complicated gam with gam.scope for stepwise selection
 
-numeric_train_data <- train_data_full %>%
+numeric_train_data <- train_data_full |>
   select_if(is.numeric)
 
 # removed ind and transportation customers since they had less than 3 unique values
@@ -837,7 +850,7 @@ p.gam <- predict(g5,newdata=test_data)
 gam_accuracy <- accuracy(p.gam, test_data$Sales_residential)
 
 # TRY ON SPLIT DATASET
-numeric_train_split_data <- train_data_split %>%
+numeric_train_split_data <- train_data_split |>
   select_if(is.numeric)
 
 g4_split <- gam(Sales_residential~.-Customers_industrial-Customers_transportation-DATE-Electric.Generators..Electric.Utilities , data=numeric_train_split_data)
