@@ -125,7 +125,7 @@ head(data)
 # FIRST, PLOT THE OVERALL TOTAL GENERATION BY SOURCE
 
 ggplot(data, aes(x = DATE, y = total_generation_source)) +
-  geom_line(color = "darkblue", size = 0.55, ) +
+  geom_line(color = "darkblue", size = 0.7, ) +
   labs(
     x = "Time",
     y = "Total Energy Generation (MWh)"
@@ -375,7 +375,7 @@ plot(data$DATE, data$Combined.Heat.and.Power..Commercial.Power,
      type = "l", col = "orange", pch = 16, xlab = "Date", ylab = "Generation",
      main = "Time Series Combined Heat and Power. Commercial Power", ylim = c(0, 20000)
 )
-legend("topright", legend = "Solar | Thermal | Photovoltaic", col = "orange", lty = 1)
+legend("topright", legend = "Generation of electric power via cogeneration (commercial)", col = "orange", lty = 1)
 # after 2011, almost steady increase with high volatility
 
 # Plot time series Combined.Heat.and.Power..Electric.Power
@@ -556,6 +556,59 @@ ggplotly(p_ressales)
 # appears to have prominent seasonality
 # increasing trend with a spike in Jan 2015
 
+
+### Weather Data
+plot(data$DATE, data$tavg, type="l", col="blue", xlab="Date", ylab="Avg temperature", main="Temperature Over Time")+
+  axis(1, at=data$DATE[seq(1, length(data$DATE), by=730)], labels=format(data$DATE[seq(1, length(data$DATE), by=730)], "%Y"))
+  custom_theme()
+  
+  
+  
+avg_temp <- data %>%
+  group_by(month) %>%
+  summarise(avg_generation = mean(tavg, na.rm = TRUE)) %>%
+  mutate(highlight_flag = ifelse(avg_generation > 20, TRUE, FALSE))
+
+ggplot(avg_temp, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
+  geom_bar(stat = "identity", color = "darkblue") +
+  labs(x = "Month", y = "Avg. temperatures (°C)", fill= 'Temperatures') +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
+  scale_y_continuous(limits = c(0, 60), breaks = seq(0, 60, by = 10)) +
+  geom_text(
+    data = filter(avg_temp, month == "lug"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  ) +
+    custom_theme()
+
+
+avg_prc <- data %>%
+  group_by(month) %>%
+  summarise(avg_generation = mean(prcp, na.rm = TRUE)) %>%
+  mutate(highlight_flag = ifelse(avg_generation > 100, TRUE, FALSE))
+
+ggplot(avg_prc, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
+  geom_bar(stat = "identity", color = "darkblue") +
+  labs(x = "Month", y = "Avg. Precipitations (mm)", fill='Precipitations', title='Precipitations') +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
+  scale_y_continuous(limits = c(0, 400), breaks = seq(0, 400, by = 100)) +
+  geom_text(
+    data = filter(avg_prc, month == "giu"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  ) +
+  custom_theme()
+
+
+
+
+
+
+
+
+
+
+
 ### Create tsible object (specialized object for time series analysis)
 # Copy data
 data_tsbl <- data
@@ -684,4 +737,6 @@ ggplot(dcmp_long[dcmp_long$series %in% c("Sales_residential", "season_adjust"), 
   custom_theme()
 
 # Exploratory Data Analysis complete - on to the modeling!
+
+
 

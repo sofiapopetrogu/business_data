@@ -170,24 +170,19 @@ ressales_ts_arima_train = ts(train_data_full$Sales_residential, frequency = 12)
 
 
 
-# numerical data after 2012
-numerical_data_split_train <- data_tsbl[data_tsbl$DATE >= as.Date("2012-01-01"), ]|>
-  data_tsbl[data_tsbl$DATE < as.Date("2022-01-01"), ] |>
-  select_if(is.numeric) |>
-  ts(data_tsbl$Sales_residential)
+numerical_data_train_split <- data %>%
+  filter(DATE >= as.Date("2012-01-01") & DATE < as.Date("2022-01-01")) %>%
+  select_if(is.numeric)
 
-numerical_data_split_test <- data_tsbl[data_tsbl$DATE >= as.Date("2022-01-01"), ]|>
-  select_if(is.numeric) |>
-  ts(data_tsbl$Sales_residential)
 
-# full dataset
-numerical_data_train <- data_tsbl[data_tsbl$DATE < as.Date("2022-01-01"), ] |>
-  select_if(is.numeric) |>
-  ts(data_tsbl$Sales_residential)
+numerical_data_train <- data %>%
+  filter(DATE < as.Date("2022-01-01")) %>%
+  select_if(is.numeric)
 
-numerical_data_test <- data_tsbl[data_tsbl$DATE >= as.Date("2022-01-01"), ] |>
-  select_if(is.numeric) |>
-  ts(data_tsbl$Sales_residential)
+numerical_test <- data %>%
+  filter(DATE >= as.Date("2022-01-01")) %>%
+  select_if(is.numeric)
+
 
 ############################### Pre-Modeling ##################################
 p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
@@ -483,7 +478,7 @@ accuracies
 # Most important thing: select which predictor we'll use
 # stepwise selection
 ################### FULL DATASET (FROM 2001 TO 2022)
-lr_fullModel = tslm(Sales_residential ~ ., data=numerical_data_train)
+lr_fullModel = lm(Sales_residential ~ ., data=numerical_data_train)
 summary(lr_fullModel) # Multiple R-squared:  0.9906;	Adjusted R-squared:  0.9893 F = 760.2 on 32 and 231 DF;  p-value: < 0.0000000022
 lr_step_aic = step(lr_fullModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic) # Multiple R-squared:  0.9904;	Adjusted R-squared:  0.9897; F:  1259 on 20 and 243 DF;  p-value: < 0.0000000022
@@ -491,7 +486,7 @@ summary(lr_step_aic) # Multiple R-squared:  0.9904;	Adjusted R-squared:  0.9897;
 ################### PARTIAL DATASET (FROM 2012 TO 2022)
 
 # Note: stepwise function getting warnings since fit is already 1
-lr_splitModel = tslm(Sales_residential ~ ., data=numerical_data_split_train)
+lr_splitModel = lm(Sales_residential ~ ., data=numerical_data_train_split)
 summary(lr_splitModel) # Multiple R-squared: 1; Adjusted R-squared 1; F: 3.704e+10 on 43 and 88 DF,  p-value: < 0.00000000000000022
 lr_step_aic_split = step(lr_splitModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic_split) # Multiple R-squared: 1; Adjusted R-squared: 1; F: 7.939e+10 on 21 and 110 DF,  p-value: < 0.00000000000000022
@@ -509,6 +504,7 @@ extractAIC(mlr)
 # check autocorrelations in residuals
 acf(residuals(mlr))
 
+acf(residuals(lr_fullModel))
 
 
 #reduce collinearity SPLIT
