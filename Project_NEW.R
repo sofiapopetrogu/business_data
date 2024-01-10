@@ -745,7 +745,8 @@ summary(arima_model) # AIC=378.89. ARIMA(5,1,0)
 
 
 # MANUAL SARIMA
-s
+arimamodel0 <- arima(train_data_full$Sales_residential, order = c(5,1,0), seasonal = list(order = c(1,0,1), period = 12))
+summary(arimamodel0)
 
 # order	
 # A specification of the non-seasonal part of the ARIMA model: the three integer components 
