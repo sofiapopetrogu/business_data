@@ -123,12 +123,14 @@ find_correlations <- function(data, threshold = 0.1) {
   return(high_corr_df)
 }
 
+set_flextable_defaults(digits = 2)
+
 # Print nice table for report (from accuracies tibble)
 print_nice <- function(accs){
   accs |>
     select(.model, ME, RMSE, MAE, MPE, MAPE, ACF1)   |> # select columns
     flextable()  |>
-    colformat_double(big.mark = ",", digits = 2, na_str = "N/A")
+    colformat_double(digits = 2)
 }
 
 
@@ -200,6 +202,7 @@ ressales_ts <- ts(data_tsbl$Sales_residential, frequency = 12)
 ressales_ts_train <- ts(train_data_full$Sales_residential, frequency = 12)
 
 # TS test
+ressales_ts_test <- ts(test_data$Sales_residential, frequency = 12)
 
 
 
@@ -609,6 +612,7 @@ data_tsbl[variables_sel] |>
 
 
 ################################################# Exponential Smoothing
+
 # We want a method that takes into account seasonality as we have seen
 # Forecasts produced using exponential smoothing methods are weighted averages
 # of past observations, with the weights decaying exponentially as the
@@ -631,13 +635,15 @@ hw1<- hw(ressales_ts_train, seasonal="additive", h = 12)
 # Multiplicative
 hw2<- hw(ressales_ts_train, seasonal="multiplicative", h = 12)
 
-#Plot forecast
+#Plot forecast ADDITIVE
 autoplot(ressales_ts)+
-  autolayer(hw1, series="Holt-Winters additive' method", PI=F)
+  autolayer(hw1, series="HW additive", PI=F) + 
+  theme(legend.position = c(0.8, 0.2))
 
-#Plot forecast
+#Plot forecast MULTIPLICATIVE
 autoplot(ressales_ts)+
-  autolayer(hw2, series="Holt-Winters multiplicative' method", PI=F)
+  autolayer(hw2, series="HW multiplicative", PI=F)+ 
+  theme(legend.position = c(0.8, 0.2))
 
 summary(hw1) # AIC: 6488.702
 summary(hw2) # AIC: 6482.330
@@ -664,16 +670,36 @@ hw2_acc = hw2_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE
 accuracies = bind_rows(accuracies, hw1_acc)
 accuracies = bind_rows(accuracies, hw2_acc)
 
+# The ETS models are a family of time series models with an underlying 
+# state space model consisting of a level component, a trend component 
+# (T), a seasonal component (S), and an error term (E). i.e. Exponential smoothing
+
 
 ###################################### ARIMA Models
+# While exponential smoothing models are based on a description of the trend
+# and seasonality in the data, ARIMA models aim to describe the autocorrelations
+# in the data.
+
 # p: autoregresive component (AR): Captures the linear relationship between the current observation and its previous values (lags).
 # d: differencing of the time series to achieve stationarity. degrees of differencing needed
 # q: MA (Moving Average): Models the short-term, unobserved shocks or random fluctuations in the data.
 
 # Differencing required before running ARIMA:
 plot(p_ressales)
-ressales_ts_df <- diff(ressales_ts)
+Acf(data_tsbl$Sales_residential)
+
+# One way to make a non-stationary time series stationary — 
+#compute the differences between consecutive observations. 
+#This is known as differencing.
+ressales_ts_df <- diff(ressales_ts,  lag = 1)
 tsdisplay(ressales_ts_df)
+
+# After differencing ther is still seasonality present, we can difference a second 
+# time
+
+ressales_ts_df_2 <- diff(ressales_ts_df,  lag = 1)
+tsdisplay(ressales_ts_df_2)
+
 # Plot differentiated data to check for stationarity:
 
 p_ts_df <- autoplot(ressales_ts_df, xlab = "Time", ylab = "ResidentialSales") +
@@ -699,27 +725,51 @@ grid.arrange(p_acf_df, p_pacf_df, nrow = 2)
 # using auto.arima automatically it finds the best parameters.
 arima_model = auto.arima(train_data_full$Sales_residential,
                          lambda = "auto",
-                         stepwise = FALSE,
+                         stepwise = TRUE,
                          seasonal = TRUE,
                          trace = TRUE,
                          approximation = FALSE,
-                         allowdrift = TRUE)
+                         allowdrift = TRUE,
+                         nmodels = 500,
+                         max.p = 12,
+                         max.q = 12,
+                         max.P = 12,
+                         max.Q = 12,
+                         max.order = 6,
+                         max.d = 2,
+                         max.D = 2,)
 summary(arima_model) # AIC=378.89. ARIMA(5,1,0)
 
-# let's try to use this model but to model the seasonality which apparently is not considered by auto.arima.
-
-arimamodel0 <- arima(train_data_full$Sales_residential, order = c(5,1,0), seasonal = list(order = c(1,0,1), period = 12))
-summary(arimamodel0)
+# let's try to use this model but to model the seasonality which apparently 
+# is not considered by auto.arima.
 
 
+# MANUAL SARIMA
+s
+
+# order	
+# A specification of the non-seasonal part of the ARIMA model: the three integer components 
+# (p,d,q) are the AR order, the degree of differencing, and the MA order.
+
+# seasonal	
+# A specification of the seasonal part of the ARIMA model, plus the period
+# (which defaults to frequency(x)). This may be a list with components order 
+# and period, or just a numeric vector of length 3 which specifies the seasonal
+# order. In the latter case the default period is used.
 
 
 ### FORECAST
 forecast_arima = forecast(arima_model, h=12)
 forecast_arima0 = forecast(arimamodel0, h=12)
-### PLOT
+### PLOT AUTO ARIMA
 autoplot(forecast_arima, main = 'ARIMA Forecast on sales')+
   custom_theme()
+
+### PLOT MANUAL ARIMA
+autoplot(forecast_arima0, main = 'ARIMA Forecast on sales')+
+  custom_theme()
+
+
 ### ACCURACY
 arima_accuracy=accuracy(forecast_arima, test_data$Sales_residential)
 arima_accuracy = as_tibble_row(arima_accuracy[2,])
@@ -730,7 +780,11 @@ arima_accuracy$ACF1 = ACF1(residuals(arima_model))
 arima_accuracy = arima_accuracy[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
 arima_accuracy
 
+print_nice(arima_accuracy)
+
 accuracies= bind_rows(accuracies, arima_accuracy)
+
+
 
 arima_accuracy0=accuracy(forecast_arima0, test_data$Sales_residential)
 arima_accuracy0 = as_tibble_row(arima_accuracy0[2,])
@@ -739,26 +793,30 @@ arima_accuracy0$.type = 'Test'
 arima_accuracy0$RMSSE =NA
 arima_accuracy0$ACF1 = ACF1(residuals(arimamodel0))
 arima_accuracy0 = arima_accuracy0[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+arima_accuracy0
+
+print_nice(arima_accuracy0)
 
 accuracies= bind_rows(accuracies, arima_accuracy0)
+
 
 ### RESIDUALS
 p_arima_res <- ggplot(ressales_ts_arima_train, aes(x = residuals(arima_model))) +
   geom_histogram(bins = 30, fill = "lightblue", color = "black") +
-  labs(x = "Value", y = "Frequency", title = "Histogram of residuals with Trend")+
+  labs(x = "Value", y = "Frequency", title = "Reisduals auto arima")+
   custom_theme()
 
 p_arima_res0 <- ggplot(ressales_ts_arima_train, aes(x = residuals(arimamodel0))) +
   geom_histogram(bins = 30, fill = "lightblue", color = "black") +
-  labs(x = "Value", y = "Frequency", title = "Histogram of residuals with Trend")+
+  labs(x = "Value", y = "Frequency", title = "Residuals manual arima")+
   custom_theme()
 
 plot(p_arima_res)
 plot(p_arima_res0)
 
 
-shapiro.test(residuals(arima_model)) # suggest is normal
-shapiro.test(residuals(arimamodel0)) # suggest is normal
+shapiro.test(residuals(arima_model)) # suggest is not normal
+shapiro.test(residuals(arimamodel0)) # suggest is not normal
 
 ### AUTOCORRELATIONS
 
@@ -769,8 +827,8 @@ Pacf(residuals(arima_model))
 ggAcf(arimamodel0$residuals) # MUCH better. values are all under the threshold, even if seasonality still present.
 Pacf(arimamodel0$residuals) # very good indeed, even if some values are over the threshold.
 
-#  IMPORTANT: We can ignore one significant spike in each plot if it is just outside the limits, and not in the first few lags.
-
+#  IMPORTANT: We can ignore one significant spike in each plot if it is just 
+# outside the limits, and not in the first few lags.
 
 
 
@@ -792,6 +850,8 @@ ro <- rolling_origin(pred, h = 12, rolling=FALSE)
 ro$global_accu
 
 
+
+
 knn_acc = as_tibble_row(ro$global_accu)
 knn_acc$.model = 'KNN'
 knn_acc$.type = 'Test'
@@ -804,23 +864,35 @@ knn_acc = knn_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE
 
 accuracies= bind_rows(accuracies, knn_acc)
 
+print_nice(filter(accuracies, .model == 'KNN'))
+
 ################################## Generalized Additive Model (GAM)
+# In statistics, a generalized additive model (GAM) is a generalized
+# linear model in which the linear response variable depends linearly
+# on unknown smooth functions of some predictor variables, and interest
+# focuses on inference about these smooth functions.
 library(gam)
 
 
 # First pull our baseline linear regression model
-
+# Create a time variable to index the time points in the series
 tt <- 1:length(train_data_full$Sales_residential)
+# Create a seasonal factor representing the months of the year
 seas <- factor(rep(1:12, length.out = length(train_data_full$Sales_residential)))
 
 
-
 g1 <- lm(train_data_full$Sales_residential ~ tt+seas) # baseline linear regression model
+# seas is included as a predictor, allowing the model to account for seasonal variations.
 summary(g1) # Multiple R-squared:  0.7941,	Adjusted R-squared:  0.7842 F-statistic: 80.65 on 12 and 251 DF,  p-value: < 0.00000000000000022
 AIC(g1) # 6062.793
+plot(as.numeric(ressales_ts), type="l")
+lines(fitted(g1), col ="red") # fit according to GAM (g1)
 
 # add smoothing spline for trend
 g2 <- gam(train_data_full$Sales_residential ~ s(tt)+seas)
+# s(tt) specifies a smooth term for the time variable tt. The s() function 
+#is used to fit a non-linear spline to the time variable, capturing 
+#non-linear trends in the data.
 summary(g2) # have ANOVA for parametric and non-parametric effects: both effects are significant
 # time has a non-linear effect
 plot(g2, se=T) # diagnostic plot called "Partial Residuals vs. Fitted Values."
@@ -828,6 +900,7 @@ AIC(g2) # 6054.869
 
 ####try another option with loess (lo)
 g3<- gam(train_data_full$Sales_residential ~ lo(tt)+seas)
+# lo() Specify a loess fit in a GAM formula
 summary(g3) # simmilar results to g2
 plot(g3, se=T)
 AIC(g3) # 6054.832
@@ -856,7 +929,11 @@ summary(g4)
 #Values for df should be greater than 1, with df=1 implying a linear fit
 #determines set of variables that need to be inserted in final model
 
-sc = gam.scope(numeric_train_data[,c(-11,-38)], response=11, arg=c("df=2","df=3","df=4"))
+sc = gam.scope(numeric_train_data,
+               response=which(names(numeric_train_data) == "Sales_residential"),
+               arg=c("df=2","df=3","df=4"), smoother='s')
+#Builds a GAM model in a step-wise fashion. For each "term" there is an ordered
+#list of alternatives, and the function traverses these in a greedy fashion.
 g5<- step.Gam(g4, scope=sc, trace=T) # use first model g4 as starting point and then add scope
 
 summary(g5) # sig effects for both parametetric and nonparametric
@@ -872,8 +949,9 @@ par(mfrow=c(1,1))
 #plot(g5, se=T, ask=t)
 
 #Prediction
-p.gam <- predict(g5,newdata=test_data)
+p.gam <- predict(g5, newdata=test_data)
 gam_accuracy <- accuracy(p.gam, test_data$Sales_residential)
+gam_accuracy 
 
 # TRY ON SPLIT DATASET
 numeric_train_split_data <- train_data_split |>
@@ -885,7 +963,9 @@ par(mfrow=c(3,5))
 plot(g4_split, se=T)
 summary(g4_split)
 
-sc_split = gam.scope(numeric_train_split_data[,c(-11,-38)], response=11, arg=c("df=2","df=3","df=4"))
+sc_split = gam.scope(numeric_train_data,
+                     response=which(names(numeric_train_data) == "Sales_residential")
+                     , arg=c("df=2","df=3","df=4"))
 g5_split<- step.Gam(g4_split, scope=sc_split, trace=T)
 
 summary(g5_split) # not significant for non-parametric
@@ -903,9 +983,6 @@ AIC(g5) #4716.624
 #Prediction
 p.gam.split <- predict(g5_split,newdata=test_data)
 gam_split_accuracy <- accuracy(p.gam.split, test_data$Sales_residential)
-
-
-
 
 
 
@@ -945,6 +1022,7 @@ library(gbm)
 
 train_gbm = train_data_full[, !names(train_data_full) %in% "DATE", drop = FALSE] #it gave errors with the DATE variable.
 
+# Generalized Boosted Regression Modeling (GBM)
 model_gbm = gbm(Sales_residential ~.,
                 data = train_gbm,
                 distribution = "gaussian",
@@ -961,7 +1039,9 @@ model_gbm = gbm(Sales_residential ~.,
 accuracy(model_gbm$fit, train_data_full$Sales_residential) # on train
 pred_y = predict.gbm(model_gbm, test_data)
 accuracy_gb = accuracy(pred_y, test_data$Sales_residential) # on test, no overfitting and good results
+accuracy_gb
 
+print_nice(accuracy_gb)
 
 accuracy_gb = as_tibble(accuracy_gb)
 accuracy_gb$.model = 'Gradient Boosting'
@@ -975,12 +1055,27 @@ accuracies= bind_rows(accuracies, accuracy_gb)
 
 # PLOTTING
 x_ax = 1:length(pred_y)
-plot(x_ax, test_data$Sales_residential, col="blue", pch=20, cex=.9)
+plot(x_ax, test_data$Sales_residential, col="blue", pch=20,
+     cex=.9, type='l', xlab="Month", ylab="Sales_residential")
 lines(x_ax, pred_y, col="red", pch=20, cex=.9)
+legend("topright",            # Position of the legend
+       legend=c("Data", "GBM Prediction"), # Text
+       col=c("blue", "red"),  # Colors
+       pch=20,               # Type of point
+       lty=1)                # Type of line
+title(main="Boosting Prediction")
+
 
 x_ax_train = 1:length(train_data_full$Sales_residential)
-plot(x_ax_train, train_data_full$Sales_residential, col="red", pch=20, cex=.9)
-lines(x_ax_train, model_gbm$fit, col="black", pch=20, cex=.9)
+plot(x_ax_train, train_data_full$Sales_residential, col="black", pch=20,
+     cex=.9, type='l', xlab="Month", ylab="Sales_residential")
+lines(x_ax_train, model_gbm$fit, col="red", pch=20, cex=.9)
+legend("topright",            # Position of the legend
+       legend=c("Data", "GBM fit"), # Text
+       col=c("black", "red"),  # Colors
+       pch=20,               # Type of point
+       lty=1)                # Type of line
+title(main="Boosting fit")
 
 
 ##################################### CHOOSING THE BEST MODEL ###############################
