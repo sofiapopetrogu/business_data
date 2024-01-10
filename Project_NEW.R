@@ -57,7 +57,7 @@ custom_theme <- function() {
     )
 }
 
-reduce_multicollinearity <- function(model) {
+reduce_multicollinearity <- function(model, vif_cutoff=7) {
   while(TRUE) {
     # Get the predictors that are part of the model
     predictors <- names(coef(model))[-1]
@@ -65,7 +65,7 @@ reduce_multicollinearity <- function(model) {
     # Calculate VIF for each variable in the model
     vif_values <- vif(model)
     # Check if the maximum VIF is greater than the threshold (20)
-    if(max(vif_values) < 10) {
+    if(max(vif_values) < vif_cutoff) {
       break
     }
 
@@ -143,6 +143,37 @@ data$total_generation_producer <- rowSums(data[, 2:5]) # total by producer
 data$total_generation_source <- rowSums(data[, 6:9]) # total by source
 data$month <- month(data$DATE, label = TRUE) # each row is a month
 
+# Select only relevant variables
+# > relevant_vars
+# [1] "DATE"                                            
+# [2] "Combined.Heat.and.Power..Commercial.Power"       
+# [3] "Combined.Heat.and.Power..Electric.Power"         
+# [4] "Electric.Generators..Electric.Utilities"         
+# [5] "Electric.Generators..Independent.Power.Producers"
+# [6] "Natural.Gas"                                     
+# [7] "Other.Biomass"                                   
+# [8] "Petroleum"                                       
+# [9] "Solar.Thermal.and.Photovoltaic"                  
+# [10] "Customers_residential"                           
+# [11] "Price_residential"                               
+# [12] "Customers_commercial"                            
+# [13] "Price_commercial"                                
+# [14] "Customers_industrial"                            
+# [15] "Price_industrial"                                
+# [16] "Customers_transportation"                        
+# [17] "Price_transportation"                            
+# [18] "Customers_total"                                 
+# [19] "Price_total"                                     
+# [20] "tavg"                                            
+# [21] "tmin"                                            
+# [22] "tmax"                                            
+# [23] "prcp"                                            
+# [24] "wspd"                                            
+# [25] "pres"                                            
+# [26] "month"   
+relevant_vars <- colnames(data)[c(1,2,3,4,5,6,7,8,9,12,13,14,17,18,21,22,25,26,29,30,31,32,33,34,35,36,39)]
+data <- data[relevant_vars]
+
 # creating tsible object for time series analysis
 data_tsbl = data #copy
 data_tsbl$DATE = yearmonth(data_tsbl$DATE)
@@ -186,13 +217,15 @@ p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
-ggplotly(p_ressales) # Seasonality and increasing trend with a spike in 2015
+plot(p_ressales) # Seasonality and increasing trend with a spike in 2015
 
 ########### Correlations
 # relevant correlations df
 correlations_df <- find_correlations(data, threshold = 0.1)
-# numbers corresponds to column to include. Choice is based on correlation matrix
-data_tsbl[colnames(data_tsbl)[c(12, 2, 3, 4, 5, 6, 7, 8 ,9, 10, 13, 14, 17, 21, 25, 31, 32, 33, 34, 35, 36)]] |>
+# Select the columns that we want to do correlations for
+corr_cols <- colnames(numerical_data_train)
+
+data_tsbl[corr_cols] |>
   GGally::ggpairs()
 
 # Get correlations from previously defined correlations function
@@ -350,7 +383,10 @@ summary(tslm_trend_season) # R-squared = 0.7858; F = 73.06 with 239 df; p < 0.00
 
 ########## PLOTTING AND RESIDUALS ANALYSIS
 ## PLOT VALUES vs FITTED
-p_tslm_t <- ggplot(train_data_full, aes(x = DATE, y = Sales_residential)) +
+data_pre22 <- filter(data, DATE < as.Date("2022-01-01"))
+
+
+p_tslm_t <- ggplot(data_pre22, aes(x = DATE, y = Sales_residential)) +
   geom_line() +
   labs(x = "Time", y = "Residential Sales (MWh)", title = "Real TimeSeries vs Fitted Values TSLM") +
   scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
@@ -360,9 +396,9 @@ p_tslm_t <- ggplot(train_data_full, aes(x = DATE, y = Sales_residential)) +
             color = "darkred", linetype = "twodash"
   )
 
-ggplotly(p_tslm_t)
+plot(p_tslm_t)
 
-p_tslm_ts <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
+p_tslm_ts <- ggplot(data_pre22, aes(x = DATE, y = Sales_residential)) +
   geom_line() +
   labs(x = "Time", y = "Residential Sales (MWh)", title = "Real TimeSeries vs Fitted Values TSLM") +
   scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
@@ -372,25 +408,17 @@ p_tslm_ts <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
             color = "red"
   )
 
-ggplotly(p_tslm_ts)
+plot(p_tslm_ts)
 
-# Create a sequence of dates from 2010 to 2022
-date_sequence <- seq(2010, 2022, by=2)
-
-autoplot(ressales_ts_10, main = 'Real TimeSeries vs Fitted Values TSLM subset', y = 'Residential Sales (MWh') +
-  custom_theme() +
-  geom_line(aes(y = ressales_ts_10), color = "black", linetype = "solid") +
-  geom_line(aes(y = fitted(m1)), color = "red", linetype = "solid") +
-  scale_x_continuous(breaks = seq(10, 22, by = 2), labels = date_sequence)
 
 ## RESIDUALS
-p_tslm_res <- ggplot(data, aes(x = residuals(tslm_trend))) +
+p_tslm_res <- ggplot(data_pre22, aes(x = residuals(tslm_trend))) +
   geom_histogram(bins = 30, fill = "lightblue", color = "black") +
   labs(x = "Value", y = "Frequency", title = "Histogram of residuals with Trend")+
   custom_theme()
-ggplotly(p_tslm_res)
+plot(p_tslm_res)
 
-p_tslm_ts_res_hist <- ggplot(data, aes(x = residuals(tslm_trend_season))) +
+p_tslm_ts_res_hist <- ggplot(data_pre22, aes(x = residuals(tslm_trend_season))) +
   geom_histogram(bins = 30, fill = "lightblue", color = "black") +
   labs(x = "Value", y = "Frequency", title = "Histogram of residuals with Trend and Season")+
   custom_theme()
@@ -409,13 +437,14 @@ acf(residuals(tslm_trend_season))
 ###### FORECAST
 # grey area 80%
 # light shaded area 95%
-plot(forecast(tslm_trend_season))
-plot(forecast(tslm_trend))
+# PLOT forecasts
+plot(forecast(tslm_trend_season, h =12), main = 'Forecast tslm_trend_season')
+plot(forecast(tslm_trend, h =12), main = 'Forecast tslm_trend')
 
 ###### ACCURACIES
 
-tslm_trend_acc = as_tibble(accuracy(forecast(tslm_trend, h=12), test_data$Sales_residential))
-tslm_trend_season_acc = as_tibble(accuracy(forecast(tslm_trend_season, h=12), test_data$Sales_residential))
+tslm_trend_acc <- as_tibble(accuracy(forecast(tslm_trend, h=12), test_data$Sales_residential))
+tslm_trend_season_acc <- as_tibble(accuracy(forecast(tslm_trend_season, h=12), test_data$Sales_residential))
 
 tslm_trend_acc = tslm_trend_acc[2,]
 tslm_trend_acc$.model = 'tslm trend'
@@ -442,22 +471,30 @@ accuracies[accuracies$.model == 'tslm trend + season', 'ACF1'] = ACF1(residuals(
 # seasonal Naive still appears to be outperforming in performance metrics
 
 
-#################################################### MULTIPLE LINEAR REGRESSION MODELS
+######################################## MULTIPLE LINEAR REGRESSION MODELS
 # Most important thing: select which predictor we'll use
 # stepwise selection
 ################### FULL DATASET (FROM 2001 TO 2022)
 lr_fullModel = lm(Sales_residential ~ ., data=numerical_data_train)
 summary(lr_fullModel) # Multiple R-squared:  0.9906;	Adjusted R-squared:  0.9893 F = 760.2 on 32 and 231 DF;  p-value: < 0.0000000022
+extractAIC(lr_fullModel)
 lr_step_aic = step(lr_fullModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic) # Multiple R-squared:  0.9904;	Adjusted R-squared:  0.9897; F:  1259 on 20 and 243 DF;  p-value: < 0.0000000022
+extractAIC(lr_step_aic)
+
 
 ################### PARTIAL DATASET (FROM 2012 TO 2022)
 
 # Note: stepwise function getting warnings since fit is already 1
 lr_splitModel = lm(Sales_residential ~ ., data=numerical_data_train_split)
 summary(lr_splitModel) # Multiple R-squared: 1; Adjusted R-squared 1; F: 3.704e+10 on 43 and 88 DF,  p-value: < 0.00000000000000022
+extractAIC(lr_splitModel)
 lr_step_aic_split = step(lr_splitModel, direction="both", trace=0, steps=1000)
 summary(lr_step_aic_split) # Multiple R-squared: 1; Adjusted R-squared: 1; F: 7.939e+10 on 21 and 110 DF,  p-value: < 0.00000000000000022
+extractAIC(lr_step_aic_split)
+
+summary(lr_step_aic_split)
+
 
 
 #assess multicollinearity through VIF
@@ -469,9 +506,28 @@ mlr = reduce_multicollinearity(lr_step_aic)
 vif(mlr)
 summary(mlr) # Multiple R-squared:  0.9606;	Adjusted R-squared:  0.9586; F:   469 on 13 and 250 DF;  p-value: < 0.00000000000000022
 extractAIC(mlr)
+
+
+##### For report
+# Print model table summary variables
+
+# Get summary
+model_summary <- summary(mlr)
+
+# Extract coefficients and p-values
+coeffs <- model_summary$coefficients
+variables_pvalues <- data.frame(
+  Variable = rownames(coeffs),
+  P_Value = coeffs[, "Pr(>|t|)"]
+)
+
+# Create flextable
+colformat_double(flextable(variables_pvalues), digits = 6)
+####
+
+
 # check autocorrelations in residuals
 acf(residuals(mlr))
-
 acf(residuals(lr_fullModel))
 
 
@@ -484,7 +540,7 @@ extractAIC(mlr_split)
 acf(residuals(mlr_split)) # more negative autocorrelation between lag 15 and 20.
 
 
-# IN GENERAL FULL MODEL IS BETTER.
+# IN GENERAL FULL MODEL IS BETTER
 
 predict_mlr = predict(mlr, newdata = numerical_test)
 predict_mlr_split = predict(mlr_split, newdata = numerical_test)
@@ -501,20 +557,16 @@ plot(test_data_mlr$DATE, test_data$Sales_residential, type = "l", col = "black",
 
 legend("topleft", legend = c("Actual", "MLR Predictions"), col = c("black", "red"), lwd = 2)
 
-
-
-
 # Plot the actual test data
 plot(test_data_mlr$DATE, test_data$Sales_residential, type = "l", col = "black", lwd = 2, ylim = range(c(test_data$Sales_residential, predict_mlr_split)),
-     xlab = "Month", ylab = "Response Variable", main = "MLR Predictions vs Actual", xaxt="n")+
+     xlab = "Month", ylab = "Response Variable", main = "MLR Predictions split vs Actual", xaxt="n")+
   axis(side = 1, at = test_data_mlr$DATE, labels = 1:12)+
   lines(test_data_mlr$DATE, predict_mlr_split, col = "#ffa8a8", lwd = 2)
 
-legend("topleft", legend = c("Actual", "MLR Predictions"), col = c("black", "red"), lwd = 2)
+legend("topleft", legend = c("Actual", "MLR Predictions split"), col = c("black", "red"), lwd = 2)
 
 
-
-
+# Accuracies
 
 accuracy_mlr = accuracy(predict_mlr, test_data$Sales_residential)
 accuracy_mlr_split = accuracy(predict_mlr_split, test_data$Sales_residential)
@@ -539,6 +591,12 @@ accuracy_mlr_split = accuracy_mlr_split[, c('.model','.type','ME', 'RMSE', 'MAE'
 
 accuracies= bind_rows(accuracies, accuracy_mlr)
 accuracies = bind_rows(accuracies, accuracy_mlr_split)
+
+
+# Plot correlations of selected variables
+variables_sel <- c("Sales_residential", names(mlr$coefficients)[-1]) 
+data_tsbl[variables_sel] |>
+  GGally::ggpairs()
 
 
 
@@ -595,7 +653,7 @@ accuracies = bind_rows(accuracies, hw2_acc[2,])
 # q: MA (Moving Average): Models the short-term, unobserved shocks or random fluctuations in the data.
 
 # Differencing required before running ARIMA:
-ggplotly(p_ressales)
+plot(p_ressales)
 ressales_ts_df <- diff(ressales_ts)
 tsdisplay(ressales_ts_df)
 # Plot differentiated data to check for stationarity:
@@ -604,7 +662,7 @@ p_ts_df <- autoplot(ressales_ts_df, xlab = "Time", ylab = "ResidentialSales") +
   ggtitle("Residential Sales (MWh) - Differentiated Series")+
   custom_theme()
 
-ggplotly(p_ts_df)
+plot(p_ts_df)
 # Differentiating the series we can see that it seems to be more
 # stationary (in term of mean)
 
@@ -677,8 +735,8 @@ p_arima_res0 <- ggplot(ressales_ts_arima_train, aes(x = residuals(arimamodel0)))
   labs(x = "Value", y = "Frequency", title = "Histogram of residuals with Trend")+
   custom_theme()
 
-ggplotly(p_arima_res)
-ggplotly(p_arima_res0)
+plot(p_arima_res)
+plot(p_arima_res0)
 
 
 shapiro.test(residuals(arima_model)) # suggest is normal
