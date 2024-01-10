@@ -392,6 +392,8 @@ summary(tslm_trend) # R-squared = 0.2133, F = 67.77 with 250 df; p < 0.0001
 tslm_trend_season = tslm(ts(train_data_full$Sales_residential, frequency=12) ~ trend + season)
 summary(tslm_trend_season) # R-squared = 0.7858; F = 73.06 with 239 df; p < 0.0001
 
+AIC(tslm_trend_season)
+
 ########## PLOTTING AND RESIDUALS ANALYSIS
 ## PLOT VALUES vs FITTED
 data_pre22 <- filter(data, DATE < as.Date("2022-01-01"))
@@ -487,24 +489,23 @@ accuracies[accuracies$.model == 'tslm trend + season', 'ACF1'] = ACF1(residuals(
 # stepwise selection
 ################### FULL DATASET (FROM 2001 TO 2022)
 lr_fullModel = lm(Sales_residential ~ ., data=numerical_data_train)
-summary(lr_fullModel) # Multiple R-squared:  0.9906;	Adjusted R-squared:  0.9893 F = 760.2 on 32 and 231 DF;  p-value: < 0.0000000022
-extractAIC(lr_fullModel)
+summary(lr_fullModel) # Multiple R-squared:  0.5221,	Adjusted R-squared:  0.4739 F-statistic: 10.83 on 23 and 228 DF,  p-value: < 0.00000000000000022
+extractAIC(lr_fullModel) # 5304.656
 lr_step_aic = step(lr_fullModel, direction="both", trace=0, steps=1000)
-summary(lr_step_aic) # Multiple R-squared:  0.9904;	Adjusted R-squared:  0.9897; F:  1259 on 20 and 243 DF;  p-value: < 0.0000000022
-extractAIC(lr_step_aic)
+summary(lr_step_aic) # Multiple R-squared:  0.5148,	Adjusted R-squared:  0.4861 F-statistic: 17.96 on 14 and 237 DF,  p-value: < 0.00000000000000022
+extractAIC(lr_step_aic) # 5290.463
 
 
 ################### PARTIAL DATASET (FROM 2012 TO 2022)
 
 # Note: stepwise function getting warnings since fit is already 1
 lr_splitModel = lm(Sales_residential ~ ., data=numerical_data_train_split)
-summary(lr_splitModel) # Multiple R-squared: 1; Adjusted R-squared 1; F: 3.704e+10 on 43 and 88 DF,  p-value: < 0.00000000000000022
-extractAIC(lr_splitModel)
+summary(lr_splitModel) # Multiple R-squared:  0.734,	Adjusted R-squared:  0.677 F-statistic: 12.88 on 21 and 98 DF,  p-value: < 0.00000000000000022
+extractAIC(lr_splitModel) # 22.000 2470.767
 lr_step_aic_split = step(lr_splitModel, direction="both", trace=0, steps=1000)
-summary(lr_step_aic_split) # Multiple R-squared: 1; Adjusted R-squared: 1; F: 7.939e+10 on 21 and 110 DF,  p-value: < 0.00000000000000022
-extractAIC(lr_step_aic_split)
+summary(lr_step_aic_split) # Multiple R-squared:  0.7196,	Adjusted R-squared:  0.6911 F-statistic:  25.2 on 11 and 108 DF,  p-value: < 0.00000000000000022
+extractAIC(lr_step_aic_split) # 12.00 2457.08
 
-summary(lr_step_aic_split)
 
 
 
@@ -515,8 +516,8 @@ vif(lr_step_aic_split)  # curious to see the different VIF between the two model
 #reduce collinearity FULL
 mlr = reduce_multicollinearity(lr_step_aic)
 vif(mlr)
-summary(mlr) # Multiple R-squared:  0.9606;	Adjusted R-squared:  0.9586; F:   469 on 13 and 250 DF;  p-value: < 0.00000000000000022
-extractAIC(mlr)
+summary(mlr) # Multiple R-squared:  0.3198,	Adjusted R-squared:  0.2945 F-statistic: 12.64 on 9 and 242 DF,  p-value: < 0.00000000000000022
+extractAIC(mlr) # 10.000 5365.596
 
 
 ##### For report
@@ -545,8 +546,8 @@ acf(residuals(lr_fullModel))
 #reduce collinearity SPLIT
 mlr_split = reduce_multicollinearity(lr_step_aic_split)
 vif(mlr_split)
-summary(mlr_split) # Multiple R-squared:  0.9356;	Adjusted R-squared:  0.932; F: 258.5 on 14 and 249 DF;  p-value: < 0.00000000000000022
-extractAIC(mlr_split)
+summary(mlr_split) # Multiple R-squared:  Multiple R-squared:  0.3283,	Adjusted R-squared:  0.3033 F-statistic: 13.14 on 9 and 242 DF,  p-value: < 0.00000000000000022
+extractAIC(mlr_split) # 10.00 5362.42
 # check autocorrelations in residuals
 acf(residuals(mlr_split)) # more negative autocorrelation between lag 15 and 20.
 
@@ -556,7 +557,6 @@ acf(residuals(mlr_split)) # more negative autocorrelation between lag 15 and 20.
 predict_mlr = predict(mlr, newdata = numerical_test)
 predict_mlr_split = predict(mlr_split, newdata = numerical_test)
 
-# probably waste code but it works for the plot so leave it.
 test_data_mlr = test_data
 test_data_mlr$DATE = as.Date(test_data$DATE)
 
@@ -746,7 +746,7 @@ summary(arima_model) # AIC=378.89. ARIMA(5,1,0)
 
 # MANUAL SARIMA
 arimamodel0 <- arima(train_data_full$Sales_residential, order = c(5,1,0), seasonal = list(order = c(1,0,1), period = 12))
-summary(arimamodel0)
+summary(arimamodel0) # AIC=5839.81
 
 # order	
 # A specification of the non-seasonal part of the ARIMA model: the three integer components 
@@ -884,10 +884,10 @@ seas <- factor(rep(1:12, length.out = length(train_data_full$Sales_residential))
 
 g1 <- lm(train_data_full$Sales_residential ~ tt+seas) # baseline linear regression model
 # seas is included as a predictor, allowing the model to account for seasonal variations.
-summary(g1) # Multiple R-squared:  0.7941,	Adjusted R-squared:  0.7842 F-statistic: 80.65 on 12 and 251 DF,  p-value: < 0.00000000000000022
-AIC(g1) # 6062.793
+summary(g1) # Multiple R-squared:  Multiple R-squared:  0.7858,	Adjusted R-squared:  0.775 F-statistic: 73.06 on 12 and 239 DF,  p-value: < 0.00000000000000022
+AIC(g1) # 5797.583
 plot(as.numeric(ressales_ts), type="l")
-lines(fitted(g1), col ="red") # fit according to GAM (g1)
+lines(fitted(g1), col ="red") # fit according to lm (g1)
 
 # add smoothing spline for trend
 g2 <- gam(train_data_full$Sales_residential ~ s(tt)+seas)
@@ -897,56 +897,61 @@ g2 <- gam(train_data_full$Sales_residential ~ s(tt)+seas)
 summary(g2) # have ANOVA for parametric and non-parametric effects: both effects are significant
 # time has a non-linear effect
 plot(g2, se=T) # diagnostic plot called "Partial Residuals vs. Fitted Values."
-AIC(g2) # 6054.869
+AIC(g2) # 5791.203
+
+#Prediction
+p.gam.s <- predict(g2,newdata=test_data)
+gam_smooth_accuracy <- accuracy(p.gam.s, test_data$Sales_residential)
 
 ####try another option with loess (lo)
 g3<- gam(train_data_full$Sales_residential ~ lo(tt)+seas)
 # lo() Specify a loess fit in a GAM formula
-summary(g3) # simmilar results to g2
+summary(g3) # similar results to g2
 plot(g3, se=T)
-AIC(g3) # 6054.832
+AIC(g3) # 5791.502
 
 # Residual Analysis
 tsdisplay(residuals(g3)) # non significant residuals
 
 # Plot better later
 plot(as.numeric(ressales_ts), type="l")
-lines(fitted(g3), col ="red") # fit according to GAM (g1)
+lines(fitted(g2), col ="red") # fit according to GAM (g2)
 
 # Next, try more complicated gam with gam.scope for stepwise selection
 
-numeric_train_data <- train_data_full |>
-  select_if(is.numeric)
+# numerical_data_train_split
+# numerical_data_train
+# numerical_test
 
 # removed ind and transportation customers since they had less than 3 unique values
-g4 <- gam(Sales_residential~.-Customers_industrial-Customers_transportation-DATE, data=numeric_train_data)
+g4 <- gam(Sales_residential~.-Customers_industrial-Customers_transportation, data=numerical_data_train)
 
 #Show the linear effects
 par(mfrow=c(3,5))
 plot(g4, se=T)
-summary(g4)
+summary(g4) # AIC: 6020.951 
 
 #Perform stepwise selection procedure using gam scope
 #Values for df should be greater than 1, with df=1 implying a linear fit
 #determines set of variables that need to be inserted in final model
 
-sc = gam.scope(numeric_train_data,
-               response=which(names(numeric_train_data) == "Sales_residential"),
-               arg=c("df=2","df=3","df=4"), smoother='s')
+sc = gam.scope(numerical_data_train[,-9],
+               response=9,
+               arg=c("df=2","df=3","df=4"))
 #Builds a GAM model in a step-wise fashion. For each "term" there is an ordered
 #list of alternatives, and the function traverses these in a greedy fashion.
 g5<- step.Gam(g4, scope=sc, trace=T) # use first model g4 as starting point and then add scope
 
-summary(g5) # sig effects for both parametetric and nonparametric
+summary(g5) # sig effects for both parametric and nonparametric
 
-AIC(g4) #5045.061
-AIC(g5) #4716.624
+AIC(g4) # 6020.951 
+AIC(g5) # 5687.867 
 
 par(mfrow=c(3,5))
 plot(g5, se=T)
 
 # if we want to see better some plots
-par(mfrow=c(1,1))
+#par(mfrow=c(1,1))
 #plot(g5, se=T, ask=t)
 
 #Prediction
@@ -955,31 +960,26 @@ gam_accuracy <- accuracy(p.gam, test_data$Sales_residential)
 gam_accuracy 
 
 # TRY ON SPLIT DATASET
-numeric_train_split_data <- train_data_split |>
-  select_if(is.numeric)
-
-g4_split <- gam(Sales_residential~.-Customers_industrial-Customers_transportation-DATE-Electric.Generators..Electric.Utilities , data=numeric_train_split_data)
+g4_split <- gam(Sales_residential~.-Customers_industrial-Customers_transportation-Electric.Generators..Electric.Utilities , data=numerical_data_train_split)
 
 par(mfrow=c(3,5))
 plot(g4_split, se=T)
-summary(g4_split)
+summary(g4_split) # AIC: 2813.313 
 
-sc_split = gam.scope(numeric_train_data,
-                     response=which(names(numeric_train_data) == "Sales_residential")
+sc_split = gam.scope(numerical_data_train_split[,-9],
+                     response=9
                      , arg=c("df=2","df=3","df=4"))
 g5_split<- step.Gam(g4_split, scope=sc_split, trace=T)
 
-summary(g5_split) # not significant for non-parametric
-# Warning message:
-# In anova.lm(object.lm, ...) :
-#   ANOVA F-tests on an essentially perfect fit are unreliable
+summary(g5_split) # AIC: 2671.206
 
-AIC(g4_split) #159.7907
-AIC(g5_split) #141.1391
+
+AIC(g4_split) #2813.313 
+AIC(g5_split) #2671.206
 
 #compare to full
-AIC(g4) #5045.061
-AIC(g5) #4716.624
+AIC(g4) #6020.951
+AIC(g5) #5687.867
 
 #Prediction
 p.gam.split <- predict(g5_split,newdata=test_data)
@@ -1009,9 +1009,11 @@ accuracy_gam_split = accuracy_gam_split[, c('.model','.type','ME', 'RMSE', 'MAE'
 
 accuracies = bind_rows(accuracies, accuracy_gam)
 accuracies = bind_rows(accuracies, accuracy_gam_split)
+
 ##################################
 
-
+print_nice(accuracy_gam)
+print_nice(accuracy_gam_split)
 
 
 
@@ -1033,6 +1035,7 @@ model_gbm = gbm(Sales_residential ~.,
                 n.trees = 20000)
 
 
+AIC(model_gbm)
 #i've tried several parameters and those seems the best.
 
 ############# ACCURACIES
