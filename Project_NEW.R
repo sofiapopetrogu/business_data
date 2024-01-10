@@ -201,6 +201,9 @@ ressales_ts <- ts(data_tsbl$Sales_residential, frequency = 12)
 # TS train
 ressales_ts_train <- ts(train_data_full$Sales_residential, frequency = 12)
 
+# TS train split
+ressales_ts_train_split <- ts(train_data_split$Sales_residential, frequency = 12)
+
 # TS test
 ressales_ts_test <- ts(test_data$Sales_residential, frequency = 12)
 
@@ -1012,12 +1015,33 @@ accuracies = bind_rows(accuracies, accuracy_gam_split)
 
 ##################################
 
-print_nice(accuracy_gam)
-print_nice(accuracy_gam_split)
+gam_accuracies = bind_rows(accuracy_gam,accuracy_gam_split )
+print_nice(gam_accuracies)
+
+par(mfrow=c(2,2))
 
 
+# Plot models: g5 and g5_split
+# Full
+plot(as.numeric(ressales_ts_train), type="l", xlab = 'Month', ylab="MWh", main = 'Full Training')
+lines(fitted(g5), col ="red")  # fit according to GAM (g5) 
 
+plot(as.numeric(ressales_ts_test), type="l", xlab = 'Month', ylab="MWh", main = 'Test from Full Training')
+lines(p.gam, col ="red") 
 
+# Split
+plot(as.numeric(ressales_ts_train_split), type="l", xlab = 'Month', ylab="MWh", main = 'Training Split')
+lines(fitted(g5_split), col ="red")  # fit according to GAM (g5_split) 
+
+plot(as.numeric(ressales_ts_test), type="l", xlab = 'Month', ylab="MWh", main = 'Test from Split Training')
+lines(p.gam.split, col ="red")  
+
+par(mfrow=c(1,1))
+
+# GAM Residuals
+
+tsdisplay(residuals(g5)) 
+tsdisplay(residuals(g5_split)) 
 ################## GRADIENT BOOSTING
 
 library(xgboost)
@@ -1103,7 +1127,6 @@ extractAIC(mlr_split)
 
 # I would say best model is among HW_ADDITIVE (SPLIT VERSION)
 
-# AIC is useless for HW models because is non-parametric.
 # Nice table for report
 print_nice(final_acc)
 
