@@ -193,6 +193,14 @@ train_data_split <- data_tsbl |> # so that we don't take petroleum
 # For arima
 ressales_ts_arima_train = ts(train_data_full$Sales_residential, frequency = 12)
 
+# TS full
+ressales_ts <- ts(data_tsbl$Sales_residential, frequency = 12)
+
+# TS train
+ressales_ts_train <- ts(train_data_full$Sales_residential, frequency = 12)
+
+# TS test
+
 
 
 numerical_data_train_split <- data %>%
@@ -602,28 +610,41 @@ data_tsbl[variables_sel] |>
 
 ################################################# Exponential Smoothing
 # We want a method that takes into account seasonality as we have seen
+# Forecasts produced using exponential smoothing methods are weighted averages
+# of past observations, with the weights decaying exponentially as the
+# observations get older. In other words, the more recent the observation
+# the higher the associated weight. This framework generates reliable 
+# forecasts quickly and for a wide range of time series, which is a great
+# advantage and of major importance to applications in industry.
+
 # Holt Winters seasonal method
+# Holt (1957) and Winters (1960) extended Holt’s method to capture seasonality.
+# The Holt-Winters seasonal method comprises the forecast equation and three 
+# smoothing equations — one for the level  one for trend and one for seasonal component
+# So HW is an extension of exponential smoothing that also works when we have a trend
 
 
-hw1<- hw(ressales_ts_train, seasonal="additive")
-hw2<- hw(ressales_ts_train, seasonal="multiplicative")
 
+# hw Returns forecasts and other information for exponential smoothing forecasts applied to y.
+# Additive
+hw1<- hw(ressales_ts_train, seasonal="additive", h = 12)
+# Multiplicative
+hw2<- hw(ressales_ts_train, seasonal="multiplicative", h = 12)
+
+#Plot forecast
 autoplot(ressales_ts)+
-  autolayer(hw1, series="Holt-Winters' method", PI=F)
+  autolayer(hw1, series="Holt-Winters additive' method", PI=F)
+
+#Plot forecast
+autoplot(ressales_ts)+
+  autolayer(hw2, series="Holt-Winters multiplicative' method", PI=F)
 
 summary(hw1) # AIC: 6488.702
 summary(hw2) # AIC: 6482.330
 
 
-forecast_hw = forecast(hw1, new_data = ts(test_data$Sales_residential))
-forecast_hw2 = forecast(hw2, new_data = ts(test_data$Sales_residential))
-
 # Compute accuracies
-hw1_acc <- accuracy(forecast_hw, test_data$Sales_residential)
-hw2_acc <- accuracy(forecast_hw2, test_data$Sales_residential)
-
-
-hw1_acc=accuracy(forecast_hw, test_data$Sales_residential)
+hw1_acc <- accuracy(hw1, test_data$Sales_residential) # additive performs better
 hw1_acc = as_tibble_row(hw1_acc[2,])
 hw1_acc$.model = 'HW additive'
 hw1_acc$.type = 'Test'
@@ -631,8 +652,7 @@ hw1_acc$RMSSE = NA
 hw1_acc$ACF1 = ACF1(residuals(hw1))
 hw1_acc = hw1_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
 
-
-hw2_acc=accuracy(forecast_hw, test_data$Sales_residential)
+hw2_acc <- accuracy(hw2, test_data$Sales_residential)
 hw2_acc = as_tibble_row(hw2_acc[2,])
 hw2_acc$.model = 'HW multiplicative'
 hw2_acc$.type = 'Test'
@@ -641,10 +661,8 @@ hw2_acc$ACF1 = ACF1(residuals(hw2))
 hw2_acc = hw2_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
 
 
-
-
-accuracies = bind_rows(accuracies, hw1_acc[2,])
-accuracies = bind_rows(accuracies, hw2_acc[2,])
+accuracies = bind_rows(accuracies, hw1_acc)
+accuracies = bind_rows(accuracies, hw2_acc)
 
 
 ###################################### ARIMA Models
