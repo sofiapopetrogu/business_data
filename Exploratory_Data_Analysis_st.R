@@ -298,6 +298,9 @@ ggplot(avg_gas_data, aes(x = factor(month), y = avg_generation, fill = as.charac
   custom_theme()
 # highest generation in july
 
+
+
+
 # Combined Dataset for Average Generation Data 
 combined_data <- rbind(avg_data, pre2011_avg_pet_data)
 combined_data <- rbind(combined_data, post2011_avg_ren_data)
@@ -551,7 +554,7 @@ p_ressales <- ggplot(data, aes(x = DATE, y = Sales_residential)) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
 
-ggplotly(p_ressales)
+plot(p_ressales)
 
 # appears to have prominent seasonality
 # increasing trend with a spike in Jan 2015
@@ -681,6 +684,11 @@ plot_grid(plot_temp, plot_prc, plot_wspd, labels = c("Temperature", "Precipitati
 
 
 ### Create tsible object (specialized object for time series analysis)
+# For correlations we want only relevant variables i.e. not variables that are a product
+# of each other
+relevant_vars <- colnames(data)[c(1,2,3,4,5,6,7,8,9,12,13,14,17,18,21,22,25,26,29,30,31,32,33,34,35,36,39)]
+data <- data[relevant_vars]
+
 # Copy data
 data_tsbl <- data
 # change date format
@@ -689,12 +697,26 @@ data_tsbl$DATE <- yearmonth(data_tsbl$DATE)
 data_tsbl <- as_tsibble(data_tsbl, index = DATE)
 
 # Yearly seasonal plots
-gg_season(data_tsbl, y = Sales_residential)
+gg_season(data_tsbl, y = Sales_residential) +
+  theme()
 # Different view: years grouped by month
 gg_subseries(data_tsbl, y = Sales_residential)
 # Clear seasonality for summer peaks and winter
 
 ############## Assess Autocorrelations and Correlation Matrix ################
+
+# Get correlations from previously defined correlations function
+corr_df <- find_correlations(data, threshold = 0.01)
+# Print relevant correlations
+corr_sales <- corr_df[corr_df$Column1 == "Sales_residential", ]
+sorted_corr <- corr_sales[order(abs(corr_sales$Correlation), decreasing = TRUE), ]
+sorted_corr
+# select only top n to plot more clearly
+# Include sales residential
+top_corrs_names <- c("Sales_residential", sorted_corr$Column2[1:5])
+# Strongest correlations is with variables related to sales, revenue, number of customer,
+# price, which all makes sense since our variable is residential sales of electricty MWh
+
 
 #### CORRELATIONS
 # Columns to include in the correlations graph:
@@ -740,17 +762,10 @@ gg_subseries(data_tsbl, y = Sales_residential)
 # [39] "month"
 # data_tsbl[colnames(data_tsbl)[c(12, 2, 3, 4, 5, 6, 7, 8,  9, 10, 31, 32, 34, 35)]]
 # Plot correlations with graphs
-data_tsbl[colnames(data_tsbl)[c(12, 2, 3, 4, 5, 6, 7, 8 ,9, 10, 13, 14, 17, 21, 25, 31, 32, 33, 34, 35, 36)]] |>
+
+select(data, top_corrs_names, -'DATE')|>
   GGally::ggpairs()
 
-# Get correlations from previously defined correlations function
-corr_df <- find_correlations(data, threshold = 0.01)
-# Print relevant correlations
-corr_sales <- corr_df[corr_df$Column1 == "Sales_residential", ]
-sorted_corr <- corr_sales[order(abs(corr_sales$Correlation), decreasing = TRUE), ]
-sorted_corr
-# Strongest correlations is with variables related to sales, revenue, number of customer,
-# price, which all makes sense since our variable is residential sales of electricty MWh
 
 
 ### Lag plots
