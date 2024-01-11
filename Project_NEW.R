@@ -304,6 +304,8 @@ sales_fit <- train_data_full |>
     Drift = RW(Sales_residential ~ drift())
   )
 
+residuals(sales_fit$`Seasonal naive`)
+
 # FORECAST on full
 sales_fc <- sales_fit |>
   forecast(h = "1 years")
@@ -336,6 +338,19 @@ sales_fc |>
 # BEST MODEL: Seasonal NAIVE
 # ACCURACIES
 accuracies <- accuracy(sales_fc, test_data)
+
+
+#SNAIVE residuals analysis as its a good model
+snaive_ts <- snaive(ressales_ts_train, h = 12)
+
+Acf(residuals(snaive_ts))
+
+# Plot residuals
+p_snaive_res <- ggplot(data_pre22, aes(x = residuals(snaive_ts))) +
+  geom_histogram(bins = 30, fill = "lightblue", color = "black") +
+  labs(x = "Value", y = "Frequency", title = "Histogram of residuals")+
+  custom_theme()
+plot(p_snaive_res)
 
 
 
@@ -434,11 +449,15 @@ p_tslm_res <- ggplot(data_pre22, aes(x = residuals(tslm_trend))) +
   custom_theme()
 plot(p_tslm_res)
 
+Acf(residuals(tslm_trend))
+
 p_tslm_ts_res_hist <- ggplot(data_pre22, aes(x = residuals(tslm_trend_season))) +
   geom_histogram(bins = 30, fill = "lightblue", color = "black") +
   labs(x = "Value", y = "Frequency", title = "Histogram of residuals with Trend and Season")+
   custom_theme()
 print(p_tslm_ts_res_hist)
+
+Acf(residuals(tslm_trend_season))
 
 ## DW TEST (to detect autocorrelations) dw=2 desired, dw<2 positive autocorrelation.
 dwtest(tslm_trend) # DW = 1.199, p<0.0001
