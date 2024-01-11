@@ -848,12 +848,10 @@ autoplot(pred, highlight = "neighbors", faceting = FALSE)+
 
 ro <- rolling_origin(pred, h = 12, rolling=FALSE)
 
-ro$global_accu
+knn_acc = accuracy(ro$predictions[1,], test_data$Sales_residential )
 
 
-
-
-knn_acc = as_tibble_row(ro$global_accu)
+knn_acc = as_tibble_row(knn_acc)
 knn_acc$.model = 'KNN'
 knn_acc$.type = 'Test'
 knn_acc$RMSSE =NA

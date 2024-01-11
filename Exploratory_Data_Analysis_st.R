@@ -128,7 +128,8 @@ ggplot(data, aes(x = DATE, y = total_generation_source)) +
   geom_line(color = "darkblue", size = 0.7, ) +
   labs(
     x = "Time",
-    y = "Total Energy Generation (MWh)"
+    y = "Energy (MWh)",
+    title = "Total Energy Generation (MWh)" 
   ) +
   scale_x_continuous(
     breaks = seq(min(data$DATE), max(data$DATE), by = "year"),
@@ -334,24 +335,23 @@ max_point_solar <- renewable[which.max(renewable$Solar.Thermal.and.Photovoltaic)
 
 # Set the x-axis limits to go from 2011 to 2022
 ggplot(renewable, aes(x = DATE, color = "Energy Source")) +
-  geom_line(aes(y = Natural.Gas, linetype = "Natural Gas"), size = 1.5, color = alpha("red", 0.4)) +
-  geom_line(aes(y = Other.Biomass, linetype = "Biomass"), size = 1.5, color = alpha("lightblue", 0.8)) +
-  geom_line(aes(y = Solar.Thermal.and.Photovoltaic, linetype = "Solar"), size = 1.5, color = alpha("orange", 0.4)) +
+  geom_line(aes(y = Natural.Gas, linetype = "Natural Gas"), size = 1.5, color = alpha("orange", 0.6)) +
+  geom_line(aes(y = Other.Biomass, linetype = "Biomass"), size = 1.5, color = alpha("red", 0.8)) +
+  geom_line(aes(y = Solar.Thermal.and.Photovoltaic, linetype = "Solar"), size = 1.5, color = alpha("darkgreen", 0.7)) +
   geom_point(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, color = "Natural Gas"), size = 5) +
   geom_point(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, color = "Biomass"), size = 5) +
   geom_point(data = max_point_solar, aes(x = DATE, y = max_value_solar, color = "Solar"), size = 5) +
-  geom_text(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, label = paste("gas max: ", round(max_value_natural_gas, 2))), vjust = 0, hjust = 1.2, size = 4, family = "serif", color = "red") +
-  geom_text(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, label = paste("biomass max: ", round(max_value_other_biomass, 2))), vjust = -0.9, hjust = 1.2, size = 4, family = "serif", color = "blue") +
-  geom_text(data = max_point_solar, aes(x = DATE, y = max_value_solar, label = paste("solar max: ", round(max_value_solar, 2))), vjust = 0, hjust = 1.1, size = 4, family = "serif", color = "orange") +
+  geom_text(data = max_point_natural_gas, aes(x = DATE, y = max_value_natural_gas, label = paste("Gas: ", round(max_value_natural_gas, 2))), vjust = 0, hjust = 1.2, size = 6, family = "serif", color = "orange") +
+  geom_text(data = max_point_other_biomass, aes(x = DATE, y = max_value_other_biomass, label = paste("Biomass: ", round(max_value_other_biomass, 2))), vjust = -0.9, hjust = 1.2, size = 6, family = "serif", color = "red") +
+  geom_text(data = max_point_solar, aes(x = DATE, y = max_value_solar, label = paste("Solar: ", round(max_value_solar, 2))), vjust = 0, hjust = 1.1, size = 6, family = "serif", color = "darkgreen") +
   labs(
-    title = "Current  Energy Generation",
     x = "Time",
     y = "MWh"
   ) +
   scale_x_date(limits = c(as.Date("2011-01-01"), as.Date("2022-12-31")), expand = c(0, 0), date_breaks = "1 year", date_labels = "%Y") +
   scale_color_manual(
     name = "Energy Source",
-    values = c("Natural Gas" = alpha("red", 1), "Biomass" = alpha("blue", 0.8), "Solar" = alpha("orange", 1)),
+    values = c("Natural Gas" = alpha("orange", 1), "Biomass" = alpha("red", 0.8), "Solar" = alpha("darkgreen", 1)),
     breaks = c("Natural Gas", "Biomass", "Solar"),
     labels = c("Natural Gas", "Biomass", "Solar"),
     guide = "legend"
@@ -448,8 +448,8 @@ ggplot(filtered_total, aes(x = DATE, y = Customers_total)) +
 # seasonality and residential consumption has upward trend with some variability
 # This could be a nice target variable
 ggplot(data, aes(x = DATE, y = Sales_residential)) +
-  geom_line(colour = "red") +
-  labs(x = "Time", y = "MWh", title = "Residential consumption") +
+  geom_line(colour = "black") +
+  labs(x = "Time", y = "MWh", title = "Energy consumption from residential") +
   scale_y_continuous(limits = c(0, max(data$Sales_residential))) +
   scale_x_date(date_labels = "%Y", date_breaks = "2 years") +
   custom_theme()
@@ -571,7 +571,7 @@ avg_temp <- data %>%
 
 ggplot(avg_temp, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
   geom_bar(stat = "identity", color = "darkblue") +
-  labs(x = "Month", y = "Avg. temperatures (°C)", fill= 'Temperatures') +
+  labs(x = "Month", y = "Avg. temperatures (°C)", fill= 'Temperatures', title='Temperature') +
   scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
   scale_y_continuous(limits = c(0, 60), breaks = seq(0, 60, by = 10)) +
   geom_text(
@@ -598,6 +598,77 @@ ggplot(avg_prc, aes(x = factor(month), y = avg_generation, fill = as.character(h
     vjust = -0.5, color = "black", size = 6
   ) +
   custom_theme()
+
+
+avg_wspd <- data %>%
+  group_by(month) %>%
+  summarise(avg_generation = mean(wspd, na.rm = TRUE)) %>%
+  mutate(highlight_flag = ifelse(avg_generation > 15, TRUE, FALSE))
+
+ggplot(avg_wspd, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
+  geom_bar(stat = "identity", color = "darkblue") +
+  labs(x = "Month", y = "Avg. Wind speed", fill='Wind speed', title='Wind speed') +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
+  scale_y_continuous(limits = c(0, 40), breaks = seq(0, 40, by = 5)) +
+  geom_text(
+    data = filter(avg_wspd, month == "mar"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  ) +
+  custom_theme()
+
+
+
+library(gridExtra)
+library(cowplot)
+plot_grid(avg_temp, avg_prc, avg_wspd, labels = c("Temperature", "Precipitation", "Wind Speed"),
+          ncol = 3, align = "h")
+
+
+
+
+
+
+# Assuming your data frames have the correct structure, extract the ggplot objects
+plot_temp <- ggplot(avg_temp, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
+  geom_bar(stat = "identity", color = "darkblue") +
+  labs(x = "Month", y = "Avg. temperatures (°C)", fill= 'Temperatures', title='Temperature') +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
+  scale_y_continuous(limits = c(0, 60), breaks = seq(0, 60, by = 10)) +
+  geom_text(
+    data = filter(avg_temp, month == "lug"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  ) +
+  custom_theme()
+
+plot_prc <- ggplot(avg_prc, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
+  geom_bar(stat = "identity", color = "darkblue") +
+  labs(x = "Month", y = "Avg. Precipitations (mm)", fill='Precipitations', title='Precipitations') +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
+  scale_y_continuous(limits = c(0, 400), breaks = seq(0, 400, by = 100)) +
+  geom_text(
+    data = filter(avg_prc, month == "giu"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  ) +
+  custom_theme()
+
+plot_wspd <- ggplot(avg_wspd, aes(x = factor(month), y = avg_generation, fill = as.character(highlight_flag))) +
+  geom_bar(stat = "identity", color = "darkblue") +
+  labs(x = "Month", y = "Avg. Wind speed (Km/h)", fill='Wind speed', title='Wind speed') +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "#3e6fff"), labels = c("Normal", "Highest")) +
+  scale_y_continuous(limits = c(0, 40), breaks = seq(0, 40, by = 5)) +
+  geom_text(
+    data = filter(avg_wspd, month == "mar"),
+    aes(x = month, y = avg_generation, label = round(avg_generation)),
+    vjust = -0.5, color = "black", size = 6
+  ) +
+  custom_theme()
+
+# Now, create the plot grid
+plot_grid(plot_temp, plot_prc, plot_wspd, labels = c("Temperature", "Precipitation", "Wind Speed"),
+          ncol = 3, align = "h")
 
 
 

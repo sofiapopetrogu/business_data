@@ -1,24 +1,41 @@
-"","Column1","Column2","Correlation"
-"202","Sales_residential","Customers_transportation",0.457148642443417
-"193","Sales_residential","Other.Biomass",0.432589381760854
-"196","Sales_residential","Customers_residential",0.401493096345445
-"204","Sales_residential","Customers_total",0.39619603691999
-"189","Sales_residential","Combined.Heat.and.Power..Commercial.Power",0.396155062577795
-"192","Sales_residential","Natural.Gas",0.360890010780972
-"197","Sales_residential","Price_residential",0.33911513815751
-"198","Sales_residential","Customers_commercial",0.335682011025931
-"205","Sales_residential","Price_total",0.314813396939661
-"195","Sales_residential","Solar.Thermal.and.Photovoltaic",0.288594780112246
-"207","Sales_residential","tmin",0.284198563523226
-"200","Sales_residential","Customers_industrial",0.26948342682478
-"206","Sales_residential","tavg",0.257302866716074
-"199","Sales_residential","Price_commercial",0.249106443047254
-"208","Sales_residential","tmax",0.240194596206598
-"210","Sales_residential","wspd",-0.203512150963857
-"190","Sales_residential","Combined.Heat.and.Power..Electric.Power",0.16431001322648
-"191","Sales_residential","Electric.Generators..Independent.Power.Producers",0.159881548528421
-"194","Sales_residential","Petroleum",0.142572606893364
-"201","Sales_residential","Price_industrial",0.141882559225325
-"203","Sales_residential","Price_transportation",0.140780428387294
-"209","Sales_residential","prcp",0.105359619836458
-"211","Sales_residential","pres",-0.0979268628555857
+Target;Variables;Correlation;;;;;;;;;;;
+Sales_residential;Customers transportation;0,457;;;;;;;;;;;
+Sales_residential;Biomass;0,433;;;;;;;;;;;
+Sales_residential;Customers residential;0,401;;;;;;;;;;;
+Sales_residential;Customers total;0,396196037;;;;;;;;;;;
+Sales_residential;Heat and power (commercial) cogeneration;0,396;;;;;;;;;;;
+Sales_residential;Gas;0,361;;;;;;;;;;;
+Sales_residential;Price residential;0,339;;;;;;;;;;;
+Sales_residential;Customers commercial;0,336;;;;;Target: Sales residential;;;;;Target: Sales residential;
+Sales_residential;Price_total;0,314813397;;;;;;;;;;;
+Sales_residential;Solar, thermal and photovoltaic;0,289;;;;Target;Variables;Correlation;;;Target;Variables;Correlation
+Sales_residential;tmin;0,284;;;;Sales_residential;tmin;0,284;;;Sales_residential;Biomass;0,433
+Sales_residential;Customers_industrial;0,269;;;;Sales_residential;tavg;0,257;;;Sales_residential;Gas;0,361
+Sales_residential;tavg;0,257;;;;Sales_residential;tmax;0,24;;;Sales_residential;Solar, thermal and photovoltaic;0,289
+Sales_residential;Price_commercial;0,249;;;;Sales_residential;wspd;-0,204;;;;;
+Sales_residential;tmax;0,240;;;;Sales_residential;prcp;0,105;;;;;
+Sales_residential;wspd;-0,204;;;;Sales_residential;pres;-0,098;;;;;
+Sales_residential;Heat and power (power plants) cogeneration;0,164;;;;;;;;;;;
+Sales_residential;Electric generators from IPP;0,160;;;;;;;;;;;
+Sales_residential;Petroleum;0,143;;;;;;;;;;;
+Sales_residential;Price_industrial;0,142;;;;;;;;;;;
+Sales_residential;Price_transportation;0,141;;;;;;;;;;;
+Sales_residential;prcp;0,105;;;;;;;;;;;
+Sales_residential;pres;-0,098;;;;;;;;;;;
+;;;;;;;Target: Sales residential;;;;;;
+;;;;;;Target;Variables;Correlation;;;;;
+;;;;;;Sales_residential;Petroleum;0,143;;;;;
+;;;;;;;;;;;;;
+;;;;;;;;;;;;;
+;;;;;;;;;;;;;
+;;;;;;;;;;;Target: Sales residential;;
+;;;;;;;;;;;Variables;Correlation;
+;;;;;;;;;;;Customers transportation;0,457;
+;;;;;;;;;;;Biomass;0,433;
+;;;;;;;;;;;Customers residential;0,401;
+;;;;;;;;;;;Heat and power (commercial) cogeneration;0,396;
+;;;;;;;;;;;Gas;0,361;
+;;;;;;;;;;;Price residential;0,339;
+;;;;;;;;;;;Customers commercial;0,336;
+;;;;;;;;;;;Solar, thermal and photovoltaic;0,289;
+;;;;;;;;;;;tmin;0,284;
