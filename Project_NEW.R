@@ -854,7 +854,7 @@ ro <- rolling_origin(pred, h = 12, rolling=FALSE)
 knn_acc = accuracy(ro$predictions[1,], test_data$Sales_residential )
 
 
-knn_acc = as_tibble_row(knn_acc)
+knn_acc = as_tibble_row(knn_acc[1,])
 knn_acc$.model = 'KNN'
 knn_acc$.type = 'Test'
 knn_acc$RMSSE =NA
@@ -863,6 +863,7 @@ knn_acc$MPE = NA
 knn_acc$ACF1 = NA
 knn_acc$MASE = NA
 knn_acc = knn_acc[, c('.model','.type','ME', 'RMSE', 'MAE', 'MPE', 'MAPE', 'MASE','RMSSE','ACF1')]
+
 
 accuracies= bind_rows(accuracies, knn_acc)
 
