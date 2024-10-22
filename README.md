@@ -13,14 +13,14 @@ This project focuses on the analysis and forecasting of energy consumption in Wa
 
 ### Key Features
 - **Time Series Analysis**: Implemented using `fpp3`, `tsibble`, and `forecast` packages.
-- **Data Visualization**: Plots and graphical analysis are created with `ggplot2` and `plotly` to explore trends in energy generation.
+- **Data Visualization**: Plots and graphical analysis are created with `ggplot2` and `plotly` to explore trends in energy consumption.
 - **Modeling**: Includes models from `lmtest` and `forecast` for various forecasting methods.
 - **Data Processing**: Utilizes `dplyr` and `lubridate` to clean and structure the data for analysis.
 
 ### Data Description
 The project uses energy consumption data from various sources (e.g., Petroleum, Solar, Wind). Key steps include:
 1. Converting date formats.
-2. Summing generation by producer and energy source.
+2. Summing sales by producer and energy source.
 3. Removing missing or non-finite values for more accurate analysis.
 
 ### Predictive Modeling
